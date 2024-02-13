@@ -15,12 +15,13 @@ import utils.JavaFXExecutionContext
 import java.util.concurrent.TimeUnit
 
 object Main extends JFXApp3 {
-  val CENTER_FREQUNCEY = 105350000 // in Hz
-  val SAMPLE_RATE = 2000000 // sample rate in Hz
-  val FFT_SIZE = 131072 // in Hz
-  val FFT_BIN_WIDTH = SAMPLE_RATE / FFT_SIZE // in Hz
+  val START_FREQUNCEY = 105370000 // in Hz
+  val FFT_BIN_WIDTH = 20 // in Hz
   val LNA = 24 // 0 to 40 with 8 step
   val VGA = 10 // 0 to 62 with 2 step
+
+  val fftSize = 131072 // in Hz
+  val sampleRate = FFT_BIN_WIDTH * fftSize // sample rate in Hz
 
   val APP_SIZE_X = 1650
   val APP_SIZE_Y = 750
@@ -33,8 +34,12 @@ object Main extends JFXApp3 {
   //  var taskDetector = new DetectorFSKTask(pis)
   var freqOffset = 0
   var limitFreq = 0
+  println(s"fft bin width calc: ${FFT_BIN_WIDTH}")
+  println(s"sample rate: ${sampleRate}")
+  println(s"freq start: ${START_FREQUNCEY} end: ${(131072 - 1) * FFT_BIN_WIDTH + START_FREQUNCEY}")
 
-  def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label, fftBinWidth: Int, fftSize: Int): Unit = {
+
+  def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label): Unit = {
     val coef = APP_SIZE_Y - 20
     val xOffset = 20
     val min = 10
@@ -50,7 +55,6 @@ object Main extends JFXApp3 {
     val filter = new Batterworth2pLPF()
     filter.setCutoffFreqFactor(0.1)
 
-    println(s"fft bin width calc: ${fftBinWidth}")
     task match {
       case Some(value) =>
         while (value.isRunning) {
@@ -60,20 +64,20 @@ object Main extends JFXApp3 {
 
     }
     //    this.START_FREQUNCEY = scaleX.head._3.toInt / 1000000
-    task = Some(new MainFskTask(CENTER_FREQUNCEY, SAMPLE_RATE, fftSize, LNA, VGA))
+    task = Some(new MainFskTask(START_FREQUNCEY, sampleRate, fftSize, LNA, VGA))
     var count = 0;
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>
         count += 1
-        if (count % 100 == 0) {
+        if (count % 2 == 0) {
           clearImage(widthImageView, heightImageView, pixelWriter)
           count = 0
         }
-        val cutList = list.drop(freqOffset / fftBinWidth)
+        val cutList = list.drop(freqOffset / FFT_BIN_WIDTH)
         val scaleX =
           cutList
             .take(roundedX + 1)
-            .map(t => (((t._1 - cutList.head._1) / fftBinWidth).toInt, filter.apply(t._2), t._1))
+            .map(t => (((t._1 - cutList.head._1) / FFT_BIN_WIDTH).toInt, filter.apply(t._2), t._1))
         //            .map(t => (((t._1 - cutList.head._1) / fftBinWidth).toInt, t._2, t._1))
         if (scaleX.nonEmpty) {
           startLabel.text = scaleX.head._3.toInt.toString
@@ -90,7 +94,7 @@ object Main extends JFXApp3 {
               //            }
               if (currentX < roundedX - 1) {
                 //draw scale every 1M
-                val base = currScale.toInt - CENTER_FREQUNCEY
+                val base = currScale.toInt - START_FREQUNCEY
                 if (base % 1000000 == 0) {
                   pixelWriter.setPixels(currentX + xOffset, scaleYOffset - 18, 4, 30, format, y, 0, 0)
                   //draw scale every 100k
@@ -121,7 +125,7 @@ object Main extends JFXApp3 {
           }
       }
       val thread = new Thread(t)
-      thread.setName(s"${CENTER_FREQUNCEY}_${FFT_BIN_WIDTH}_${FFT_SIZE}")
+      thread.setName(s"${START_FREQUNCEY}_${FFT_BIN_WIDTH}_${fftSize}")
       thread.setDaemon(true)
       thread.start()
     }
@@ -162,13 +166,13 @@ object Main extends JFXApp3 {
     val rFastBtn = new Button("1>>>")
     val lSlowBtn = new Button("<0.1")
     val rSlowBtn = new Button("0.1>")
-    val fftSizeChoiceBox = new ChoiceBox[Int]()
-    val list = ObservableBuffer.from(List(131072, 10000, 5000, 2000, 1000, 500, 200, 100, 50, 20))
-    fftSizeChoiceBox.setItems(list)
-    fftSizeChoiceBox.setValue(FFT_SIZE)
-    fftSizeChoiceBox.getSelectionModel.selectedItemProperty().addListener { (_, ov, fftSize) =>
-      createMainFskTask(pixelWriter, startLabel, endLabel, SAMPLE_RATE / fftSize, fftSize)
-    }
+    //    val fftSizeChoiceBox = new ChoiceBox[Int]()
+    //    val list = ObservableBuffer.from(List(131072, 10000, 5000, 2000, 1000, 500, 200, 100, 50, 20))
+    //    fftSizeChoiceBox.setItems(list)
+    //    fftSizeChoiceBox.setValue(fftSize)
+    //    fftSizeChoiceBox.getSelectionModel.selectedItemProperty().addListener { (_, ov, fftSize) =>
+    //      createMainFskTask(pixelWriter, startLabel, endLabel)
+    //    }
     //    lMiddleBtn.setOnAction { _ =>
     //      val temp = this.freqOffset - 500000
     //      if (temp >= 0) {
@@ -256,7 +260,7 @@ object Main extends JFXApp3 {
       println(s"the task state${task.map(_.isRunning)}")
     }
 
-    createMainFskTask(pixelWriter, startLabel, endLabel, FFT_BIN_WIDTH, FFT_SIZE)
+    createMainFskTask(pixelWriter, startLabel, endLabel)
 
   }
 }

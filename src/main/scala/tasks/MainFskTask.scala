@@ -7,8 +7,8 @@ class MainFskTask(centerFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int
   //  start: 105000000 end: 112999938 with bin width: 61
   override def newSpectrumData(frequencyStart: Array[Double], signalPowerdBm: Array[Float]): Unit = {
     updateValue {
-      println(s"start: ${frequencyStart.head.toInt} end: ${frequencyStart.last.toInt} bin width: " +
-        s"${frequencyStart.drop(1).head.toInt - frequencyStart.head.toInt} size: ${signalPowerdBm.length} == ${frequencyStart.length}")
+//      println(s"start: ${frequencyStart.head.toInt} end: ${frequencyStart.last.toInt} bin width: " +
+//        s"${frequencyStart.drop(1).head.toInt - frequencyStart.head.toInt} size: ${signalPowerdBm.length} == ${frequencyStart.length}")
       frequencyStart.zip(signalPowerdBm).toList
     }
 
