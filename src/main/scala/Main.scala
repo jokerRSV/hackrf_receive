@@ -15,12 +15,12 @@ import utils.JavaFXExecutionContext
 import java.util.concurrent.TimeUnit
 
 object Main extends JFXApp3 {
-  val CENTER_FREQUNCEY = 104000000 // in Hz
-  val SAMPLE_RATE = 8000000 // sample rate in Hz
+  val CENTER_FREQUNCEY = 105350000 // in Hz
+  val SAMPLE_RATE = 2000000 // sample rate in Hz
   val FFT_SIZE = 131072 // in Hz
-  val FFT_BIN_WIDTH: Int = SAMPLE_RATE / FFT_SIZE // in Hz
-  val LNA = 16 // 0 to 40 with 8 step
-  val VGA = 0 // 0 to 62 with 2 step
+  val FFT_BIN_WIDTH = SAMPLE_RATE / FFT_SIZE // in Hz
+  val LNA = 24 // 0 to 40 with 8 step
+  val VGA = 10 // 0 to 62 with 2 step
 
   val APP_SIZE_X = 1650
   val APP_SIZE_Y = 750
@@ -29,7 +29,7 @@ object Main extends JFXApp3 {
   val offsetY = 0
   val scaleYOffset = 600
   var task: Option[MainFskTask] = None
-//  = new MainFskTask(CENTER_FREQUNCEY, SAMPLE_RATE, FFT_BIT_WIDTH, LNA, VGA)
+  //  = new MainFskTask(CENTER_FREQUNCEY, SAMPLE_RATE, FFT_BIT_WIDTH, LNA, VGA)
   //  var taskDetector = new DetectorFSKTask(pis)
   var freqOffset = 0
   var limitFreq = 0
@@ -38,16 +38,19 @@ object Main extends JFXApp3 {
     val coef = APP_SIZE_Y - 20
     val xOffset = 20
     val min = 10
-    val max = 250
+    val max = 150
     val diff = max - min
     val y = Array.fill(100)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
+    val y1000R = Array.fill(100)(255.toByte, 0.toByte, 0.toByte).flatMap(t => Array(t._1, t._2, t._3))
+    val y10000G = Array.fill(100)(50.toByte, 255.toByte, 50.toByte).flatMap(t => Array(t._1, t._2, t._3))
     val fillY = Array.fill(3)(0.toByte, 150.toByte, 255.toByte).flatMap(t => Array(t._1, t._2, t._3))
     val format = PixelFormat.getByteRgbInstance
     val roundedX = widthImageView / 100 * 100
 
     val filter = new Batterworth2pLPF()
-    filter.setCutoffFreqFactor(0.05)
+    filter.setCutoffFreqFactor(0.1)
 
+    println(s"fft bin width calc: ${fftBinWidth}")
     task match {
       case Some(value) =>
         while (value.isRunning) {
@@ -58,16 +61,20 @@ object Main extends JFXApp3 {
     }
     //    this.START_FREQUNCEY = scaleX.head._3.toInt / 1000000
     task = Some(new MainFskTask(CENTER_FREQUNCEY, SAMPLE_RATE, fftSize, LNA, VGA))
-
+    var count = 0;
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>
-        clearImage(widthImageView, heightImageView, pixelWriter)
+        count += 1
+        if (count % 100 == 0) {
+          clearImage(widthImageView, heightImageView, pixelWriter)
+          count = 0
+        }
         val cutList = list.drop(freqOffset / fftBinWidth)
         val scaleX =
           cutList
             .take(roundedX + 1)
-            //          .map(t => (((t._1 - cutList.head._1) / FFT_BIT_WIDTH).toInt, filter.apply(t._2), t._1))
-            .map(t => (((t._1 - cutList.head._1) / fftBinWidth).toInt, t._2, t._1))
+            .map(t => (((t._1 - cutList.head._1) / fftBinWidth).toInt, filter.apply(t._2), t._1))
+        //            .map(t => (((t._1 - cutList.head._1) / fftBinWidth).toInt, t._2, t._1))
         if (scaleX.nonEmpty) {
           startLabel.text = scaleX.head._3.toInt.toString
           this.limitFreq = scaleX.last._3.toInt
@@ -83,17 +90,18 @@ object Main extends JFXApp3 {
               //            }
               if (currentX < roundedX - 1) {
                 //draw scale every 1M
-                if ((currScale.toInt - CENTER_FREQUNCEY) % 1000000 == 0) {
+                val base = currScale.toInt - CENTER_FREQUNCEY
+                if (base % 1000000 == 0) {
                   pixelWriter.setPixels(currentX + xOffset, scaleYOffset - 18, 4, 30, format, y, 0, 0)
-                  //draw scale every 500k
-                } else if ((currScale.toInt - CENTER_FREQUNCEY) % 500000 == 0) {
-                  pixelWriter.setPixels(currentX + xOffset - 1, scaleYOffset - 2, 2, 12, format, y, 0, 0)
                   //draw scale every 100k
-                } else if ((currScale.toInt - CENTER_FREQUNCEY) % 100000 == 0) {
-                  pixelWriter.setPixels(currentX + xOffset - 1, scaleYOffset + 5, 2, 5, format, y, 0, 0)
+                } else if (base % 100000 == 0) {
+                  pixelWriter.setPixels(currentX + xOffset - 1, scaleYOffset - 5, 3, 15, format, y, 0, 0)
+                  //draw scale every 10k
+                } else if (base % 10000 == 0) {
+                  pixelWriter.setPixels(currentX + xOffset - 1, scaleYOffset + 3, 3, 7, format, y10000G, 0, 0)
                   //draw scale every 1k
-                } else if ((currScale.toInt - CENTER_FREQUNCEY) % 1000 == 0) {
-                  pixelWriter.setPixels(currentX + xOffset - 1, scaleYOffset + 7, 2, 3, format, y, 0, 0)
+                } else if (base % 1000 == 0) {
+                  pixelWriter.setPixels(currentX + xOffset - 1, scaleYOffset + 5, 3, 5, format, y1000R, 0, 0)
                 }
                 pixelWriter.setPixels(currentX + xOffset, scaleYOffset + 10, 1, 2, format, y, 0, 0)
               }
@@ -146,8 +154,10 @@ object Main extends JFXApp3 {
 
     val startLabel = new Label("0")
     val endLabel = new Label("1000000")
-    val lMiddleBtn = new Button("<<0.5")
-    val rMiddleBtn = new Button("0.5>>")
+    //    val lMiddleBtn = new Button("<<0.5")
+    //    val rMiddleBtn = new Button("0.5>>")
+    val lLowBtn = new Button("<<0.01")
+    val rLowBtn = new Button("0.01>>")
     val lFastBtn = new Button("<<<1")
     val rFastBtn = new Button("1>>>")
     val lSlowBtn = new Button("<0.1")
@@ -159,14 +169,26 @@ object Main extends JFXApp3 {
     fftSizeChoiceBox.getSelectionModel.selectedItemProperty().addListener { (_, ov, fftSize) =>
       createMainFskTask(pixelWriter, startLabel, endLabel, SAMPLE_RATE / fftSize, fftSize)
     }
-    lMiddleBtn.setOnAction { _ =>
-      val temp = this.freqOffset - 500000
+    //    lMiddleBtn.setOnAction { _ =>
+    //      val temp = this.freqOffset - 500000
+    //      if (temp >= 0) {
+    //        this.freqOffset = temp
+    //      }
+    //    }
+    //    rMiddleBtn.setOnAction { _ =>
+    //      val temp = this.freqOffset + 500000
+    //      if (temp < this.limitFreq) {
+    //        this.freqOffset = temp
+    //      }
+    //    }
+    lLowBtn.setOnAction { _ =>
+      val temp = this.freqOffset - 10000
       if (temp >= 0) {
         this.freqOffset = temp
       }
     }
-    rMiddleBtn.setOnAction { _ =>
-      val temp = this.freqOffset + 500000
+    rLowBtn.setOnAction { _ =>
+      val temp = this.freqOffset + 10000
       if (temp < this.limitFreq) {
         this.freqOffset = temp
       }
@@ -195,7 +217,7 @@ object Main extends JFXApp3 {
         this.freqOffset = temp
       }
     }
-    hBoxForLabels.children = List(lFastBtn, lMiddleBtn, lSlowBtn, rSlowBtn, rMiddleBtn, rFastBtn, fftSizeChoiceBox)
+    hBoxForLabels.children = List(lFastBtn, lSlowBtn, lLowBtn, rLowBtn, rSlowBtn, rFastBtn)
     val stackPane = new StackPane()
     //    stackPane.prefWidth = widthImageView
     //    stackPane.prefHeight = heightImageView
