@@ -16,11 +16,8 @@ public class HackrfSweepLibrary implements Library {
         void apply(int bins, DoubleByReference freqStart, FloatByReference powerdBm);
     }
 
-    /**
-     * only ONE instance running is supported at any time<br>
-     * Original signature : <code>int hackrf_lib_start(hackrf_sweep_lib_start__fft_power_callback_callback*, uint32_t, uint32_t, uint32_t, uint32_t, unsigned int, unsigned int, unsigned int, unsigned int)</code>
-     */
-    public static native int hackrf_lib_start(hackrf_sweep_lib_start__fft_power_callback_callback _fft_power_callback, int freq_hz, int sample_rate_hz, int fft_size, int lna_gain, int vga_gain);
+    public static native int hackrf_lib_start(hackrf_sweep_lib_start__fft_power_callback_callback _fft_power_callback,
+                                              int freq_hz, int sample_rate_hz, int fft_size, int lna_gain, int vga_gain);
 
     /**
      * Original signature : <code>void hackrf_lib_stop()</code>

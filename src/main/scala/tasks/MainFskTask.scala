@@ -3,10 +3,12 @@ package tasks
 import hackrf.{HackRFSweepDataCallback, HackRFSweepNativeBridge}
 import javafx.concurrent.Task
 
-class MainFskTask(centerFrequncyHz: Int, fftBinWidth: Int, lna: Int, vga: Int) extends Task[List[(Double, Float)]] with HackRFSweepDataCallback {
-
+class MainFskTask(centerFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int) extends Task[List[(Double, Float)]] with HackRFSweepDataCallback {
+  //  start: 105000000 end: 112999938 with bin width: 61
   override def newSpectrumData(frequencyStart: Array[Double], signalPowerdBm: Array[Float]): Unit = {
     updateValue {
+//      println(s"start: ${frequencyStart.head.toInt} end: ${frequencyStart.last.toInt} bin width: " +
+//        s"${frequencyStart.drop(1).head.toInt - frequencyStart.head.toInt} size: ${signalPowerdBm.length} == ${frequencyStart.length}")
       frequencyStart.zip(signalPowerdBm).toList
     }
 
@@ -18,9 +20,9 @@ class MainFskTask(centerFrequncyHz: Int, fftBinWidth: Int, lna: Int, vga: Int) e
   }
 
   override def call(): List[(Double, Float)] = {
-    HackRFSweepNativeBridge.start(this, centerFrequncyHz, 10000000, 0, lna, vga)
+    HackRFSweepNativeBridge.start(this, centerFrequncyHz, sampleRate, fftSize, lna, vga)
     println("task completed!!")
-
+    HackRFSweepNativeBridge.stop()
     Nil
   }
 }

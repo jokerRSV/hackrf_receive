@@ -41,6 +41,8 @@ public class HackRFSweepNativeBridge {
             public void apply(int bins, DoubleByReference freqStart, FloatByReference powerdBm) {
                 double[] freqStartArr = bins == 0 ? null : freqStart.getPointer().getDoubleArray(0, bins);
                 float[] powerArr = bins == 0 ? null : powerdBm.getPointer().getFloatArray(0, bins);
+//                double[] freqStartArr = new double[100];
+//                float[] powerArr = new float[100];
                 dataCallback.newSpectrumData(freqStartArr, powerArr);
             }
         };
