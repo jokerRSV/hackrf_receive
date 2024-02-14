@@ -45,7 +45,7 @@ object Main extends JFXApp3 {
     val coef = APP_SIZE_Y - 20
     val xOffset = 20
     val min = 40
-    val max = 140
+    val max = 125
     val diff = max - min
     val y = Array.fill(100)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
     val y1000R = Array.fill(100)(255.toByte, 0.toByte, 0.toByte).flatMap(t => Array(t._1, t._2, t._3))
@@ -55,7 +55,7 @@ object Main extends JFXApp3 {
     val roundedX = widthImageView / 100 * 100
 
     val filter = new Batterworth2pLPF()
-    filter.setCutoffFreqFactor(0.1)
+    filter.setCutoffFreqFactor(0.03)
 
     task match {
       case Some(value) =>
@@ -116,12 +116,7 @@ object Main extends JFXApp3 {
               val currXX = currentX + xOffset
               if (currXX >= 0 && currYY >= 0 && currXX < roundedX + xOffset && currYY < heightImageView - 1) {
                 pixelWriter.setColor(currXX, currYY, Color.Black)
-                pixelWriter.setPixels(currXX, currYY, 1, scaleYOffset - 30 - currYY, format, fillY, 0, 0)
-                //              val nextYY = (((Math.abs(nextY) - min) / diff) * coef).toInt + offsetY
-                //              val nextXX = nextX + xOffset
-                //              if (nextXX >= 0 && nextYY >= 0 && nextXX < roundedX + xOffset && nextYY < heightImageView - 1) {
-                //                (Math.min(currYY, nextYY) to Math.max(currYY, nextYY)).foreach(yy => pixelWriter.setColor(currXX, yy, Color.Blue))
-                //              }
+//                pixelWriter.setPixels(currXX, currYY, 1, scaleYOffset - 30 - currYY, format, fillY, 0, 0)
               }
             case _ => ()
           }
