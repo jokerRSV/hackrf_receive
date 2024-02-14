@@ -19,6 +19,7 @@ object Main extends JFXApp3 {
   val FFT_BIN_WIDTH = 50 // in Hz 20, 25, 40, 50, 100, 125, 200 ...
   val LNA = 24 // 0 to 40 with 8 step
   val VGA = 10 // 0 to 62 with 2 step
+  val count = 100
 
   val fftSize = 131072 // in Hz
   val sampleRate = FFT_BIN_WIDTH * fftSize // sample rate in Hz
@@ -66,15 +67,10 @@ object Main extends JFXApp3 {
 
     }
     //    this.START_FREQUNCEY = scaleX.head._3.toInt / 1000000
-    task = Some(new MainFskTask(START_FREQUNCEY, sampleRate, fftSize, LNA, VGA, bw))
-    var count = 0;
+    task = Some(new MainFskTask(START_FREQUNCEY, sampleRate, fftSize, LNA, VGA, bw, count))
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>
-        count += 1
-        if (count % 1 == 0) {
-          clearImage(widthImageView, heightImageView, pixelWriter)
-          count = 0
-        }
+        clearImage(widthImageView, heightImageView, pixelWriter)
         val cutList = list.drop(freqOffset / FFT_BIN_WIDTH)
         val scaleX =
           cutList
@@ -116,7 +112,7 @@ object Main extends JFXApp3 {
               val currXX = currentX + xOffset
               if (currXX >= 0 && currYY >= 0 && currXX < roundedX + xOffset && currYY < heightImageView - 1) {
                 pixelWriter.setColor(currXX, currYY, Color.Black)
-//                pixelWriter.setPixels(currXX, currYY, 1, scaleYOffset - 30 - currYY, format, fillY, 0, 0)
+                //                pixelWriter.setPixels(currXX, currYY, 1, scaleYOffset - 30 - currYY, format, fillY, 0, 0)
               }
             case _ => ()
           }
