@@ -36,14 +36,14 @@ object Main extends JFXApp3 {
   var limitFreq = 0
   println(s"fft bin width calc: ${FFT_BIN_WIDTH}")
   println(s"sample rate: ${sampleRate}")
-  println(s"freq start: ${START_FREQUNCEY} end: ${(131072 - 1) * FFT_BIN_WIDTH + START_FREQUNCEY}")
+  println(s"freq start: ${START_FREQUNCEY} bw: ${(131072 - 1) * FFT_BIN_WIDTH + START_FREQUNCEY - START_FREQUNCEY}")
 
 
   def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label): Unit = {
     val coef = APP_SIZE_Y - 20
     val xOffset = 20
-    val min = 10
-    val max = 150
+    val min = 40
+    val max = 140
     val diff = max - min
     val y = Array.fill(100)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
     val y1000R = Array.fill(100)(255.toByte, 0.toByte, 0.toByte).flatMap(t => Array(t._1, t._2, t._3))
