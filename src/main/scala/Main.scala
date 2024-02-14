@@ -15,8 +15,8 @@ import utils.JavaFXExecutionContext
 import java.util.concurrent.TimeUnit
 
 object Main extends JFXApp3 {
-  val START_FREQUNCEY = 105370000 // in Hz
-  val FFT_BIN_WIDTH = 20 // in Hz
+  val START_FREQUNCEY = 5000000 // in Hz
+  val FFT_BIN_WIDTH = 50 // in Hz 20, 25, 40, 50, 100, 125, 200 ...
   val LNA = 24 // 0 to 40 with 8 step
   val VGA = 10 // 0 to 62 with 2 step
 
