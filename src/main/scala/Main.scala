@@ -36,7 +36,9 @@ object Main extends JFXApp3 {
   var limitFreq = 0
   println(s"fft bin width calc: ${FFT_BIN_WIDTH}")
   println(s"sample rate: ${sampleRate}")
-  println(s"freq start: ${START_FREQUNCEY} bw: ${(131072 - 1) * FFT_BIN_WIDTH + START_FREQUNCEY - START_FREQUNCEY}")
+  val endFreq = (131072 - 1) * FFT_BIN_WIDTH + START_FREQUNCEY
+  val bw = endFreq - START_FREQUNCEY
+  println(s"freq start: ${START_FREQUNCEY} bw: ${bw} end: ${endFreq}")
 
 
   def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label): Unit = {
@@ -64,7 +66,7 @@ object Main extends JFXApp3 {
 
     }
     //    this.START_FREQUNCEY = scaleX.head._3.toInt / 1000000
-    task = Some(new MainFskTask(START_FREQUNCEY, sampleRate, fftSize, LNA, VGA))
+    task = Some(new MainFskTask(START_FREQUNCEY, sampleRate, fftSize, LNA, VGA, bw))
     var count = 0;
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>

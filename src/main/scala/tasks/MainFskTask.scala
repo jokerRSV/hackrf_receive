@@ -4,7 +4,7 @@ import hackrf.{HackRFSweepDataCallback, HackRFSweepNativeBridge}
 import javafx.concurrent.Task
 import utils.Utils._
 
-class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int) extends Task[List[(Double, Float)]] with HackRFSweepDataCallback {
+class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int, bw: Int) extends Task[List[(Double, Float)]] with HackRFSweepDataCallback {
   val next: (Seq[(Double, Float)], Double, Int) => Float =
     (xs, base, i) => xs.dropWhile(_._1 < base + i).head._2
   val lengthFunc: (Array[Double], Int) => Array[Double] =
@@ -59,7 +59,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   }
 
   override def call(): List[(Double, Float)] = {
-    HackRFSweepNativeBridge.start(this, startFrequncyHz, sampleRate, fftSize, lna, vga)
+    HackRFSweepNativeBridge.start(this, startFrequncyHz, sampleRate, fftSize, lna, vga, bw)
     println("task completed!!")
     HackRFSweepNativeBridge.stop()
     Nil

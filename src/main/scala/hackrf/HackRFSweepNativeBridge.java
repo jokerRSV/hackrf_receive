@@ -35,7 +35,7 @@ public class HackRFSweepNativeBridge {
     }
 
     public static synchronized void start(HackRFSweepDataCallback dataCallback, int centerFreq, int sample_rate_hz, int fft_size,
-                                          int lna_gain, int vga_gain) {
+                                          int lna_gain, int vga_gain, int bw) {
         HackrfSweepLibrary.hackrf_sweep_lib_start__fft_power_callback_callback callback = new HackrfSweepLibrary.hackrf_sweep_lib_start__fft_power_callback_callback() {
             @Override
             public void apply(int bins, DoubleByReference freqStart, FloatByReference powerdBm) {
@@ -48,7 +48,7 @@ public class HackRFSweepNativeBridge {
         };
         Native.setCallbackThreadInitializer(callback, new CallbackThreadInitializer(true));
 
-        HackrfSweepLibrary.hackrf_lib_start(callback, centerFreq, sample_rate_hz, fft_size, lna_gain, vga_gain);
+        HackrfSweepLibrary.hackrf_lib_start(callback, centerFreq, sample_rate_hz, fft_size, lna_gain, vga_gain, bw);
     }
 
     public static void stop() {
