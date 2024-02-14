@@ -2,6 +2,7 @@ package tasks
 
 import hackrf.{HackRFSweepDataCallback, HackRFSweepNativeBridge}
 import javafx.concurrent.Task
+import mavlib.Batterworth2pLPF
 import utils.Utils._
 
 import scala.collection.mutable.ArrayBuffer
@@ -12,11 +13,16 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   val lengthFunc: (Array[Double], Int) => Array[Double] =
     (ar, i) => ar.takeWhile(_ <= startFrequncyHz + i)
   val step = 1000 // in Hz
-  val buff = ArrayBuffer.fill(fftSize)(0f)
+  val buff = ArrayBuffer.fill(fftSize)(100f)
   var count = 0
+  val filter = new Batterworth2pLPF()
+  filter.setCutoffFreqFactor(0.01f)
 
   override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Float]): Unit = {
-    signalPowerdBm.zipWithIndex.foreach(t => buff.update(t._2, (buff.apply(t._2) + t._1) / 2))
+    signalPowerdBm.zipWithIndex.foreach { t =>
+      val buffElement = buff.apply(t._2)
+      buff.update(t._2, (buffElement + filter.apply(Math.abs(t._1))) / 2)
+    }
     count += 1
     if (count % amountCount == 0) {
       count = 0
@@ -54,7 +60,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
             base(6000) < center &&
             base(10000) < center
           if (res) {
-            println(s"find start freq: ${l.head._1.toInt} level: ${calcCenter}\n")
+            println(s"find start freq: ${l.head} end: ${l.last} center lvl: ${calcCenter}")
           }
           res
         }

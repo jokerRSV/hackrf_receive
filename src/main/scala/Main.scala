@@ -1,11 +1,9 @@
-import mavlib.Batterworth2pLPF
 import scalafx.Includes._
 import scalafx.application.JFXApp3
-import scalafx.collections.ObservableBuffer
 import scalafx.geometry.Pos.TopCenter
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.Scene
-import scalafx.scene.control.{Button, ChoiceBox, Label}
+import scalafx.scene.control.{Button, Label}
 import scalafx.scene.image.{ImageView, PixelFormat, PixelWriter, WritableImage}
 import scalafx.scene.layout.{BorderPane, HBox, StackPane}
 import scalafx.scene.paint.Color
@@ -15,11 +13,11 @@ import utils.JavaFXExecutionContext
 import java.util.concurrent.TimeUnit
 
 object Main extends JFXApp3 {
-  val START_FREQUNCEY = 5000000 // in Hz
+  val START_FREQUNCEY = 4500000 // in Hz
   val FFT_BIN_WIDTH = 50 // in Hz 20, 25, 40, 50, 100, 125, 200 ...
   val LNA = 24 // 0 to 40 with 8 step
   val VGA = 10 // 0 to 62 with 2 step
-  val count = 100
+  val count = 10
 
   val fftSize = 131072 // in Hz
   val sampleRate = FFT_BIN_WIDTH * fftSize // sample rate in Hz
@@ -55,9 +53,6 @@ object Main extends JFXApp3 {
     val format = PixelFormat.getByteRgbInstance
     val roundedX = widthImageView / 100 * 100
 
-    val filter = new Batterworth2pLPF()
-    filter.setCutoffFreqFactor(0.03)
-
     task match {
       case Some(value) =>
         while (value.isRunning) {
@@ -75,7 +70,7 @@ object Main extends JFXApp3 {
         val scaleX =
           cutList
             .take(roundedX + 1)
-            .map(t => (((t._1 - cutList.head._1) / FFT_BIN_WIDTH).toInt, filter.apply(t._2), t._1))
+            .map(t => (((t._1 - cutList.head._1) / FFT_BIN_WIDTH).toInt, t._2, t._1))
         //            .map(t => (((t._1 - cutList.head._1) / fftBinWidth).toInt, t._2, t._1))
         if (scaleX.nonEmpty) {
           startLabel.text = scaleX.head._3.toInt.toString
