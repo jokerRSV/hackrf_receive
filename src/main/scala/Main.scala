@@ -69,7 +69,7 @@ object Main extends JFXApp3 {
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>
         count += 1
-        if (count % 2 == 0) {
+        if (count % 1 == 0) {
           clearImage(widthImageView, heightImageView, pixelWriter)
           count = 0
         }
