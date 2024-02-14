@@ -112,7 +112,7 @@ object Main extends JFXApp3 {
               val currXX = currentX + xOffset
               if (currXX >= 0 && currYY >= 0 && currXX < roundedX + xOffset && currYY < heightImageView - 1) {
                 pixelWriter.setColor(currXX, currYY, Color.Black)
-                //                pixelWriter.setPixels(currXX, currYY, 1, scaleYOffset - 30 - currYY, format, fillY, 0, 0)
+                pixelWriter.setPixels(currXX, currYY, 1, scaleYOffset - 30 - currYY, format, fillY, 0, 0)
               }
             case _ => ()
           }
