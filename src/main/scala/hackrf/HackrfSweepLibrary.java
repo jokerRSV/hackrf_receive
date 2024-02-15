@@ -13,7 +13,7 @@ import com.sun.jna.ptr.FloatByReference;
  */
 public class HackrfSweepLibrary implements Library {
     public interface hackrf_sweep_lib_start__fft_power_callback_callback extends Callback {
-        void apply(int bins, DoubleByReference freqStart, FloatByReference powerdBm);
+        void apply(int bins, DoubleByReference freqStart, DoubleByReference powerdBm);
     }
 
     public static native int hackrf_lib_start(hackrf_sweep_lib_start__fft_power_callback_callback _fft_power_callback,

@@ -13,13 +13,13 @@ import utils.JavaFXExecutionContext
 import java.util.concurrent.TimeUnit
 
 object Main extends JFXApp3 {
-  val START_FREQUNCEY = 4500000 // in Hz
-  val FFT_BIN_WIDTH = 20 // in Hz 20, 25, 40, 50, 100, 125, 200 ...
-  val LNA = 24 // 0 to 40 with 8 step
-  val VGA = 10 // 0 to 62 with 2 step
-  val count = 10
+  val START_FREQUNCEY = 10400000 // in Hz
+  val FFT_BIN_WIDTH = 250 // in Hz [20, 25, 40, 50, 100, 125, 150]
+  val LNA = 16 // 0 to 40 with 8 step
+  val VGA = 0 // 0 to 62 with 2 step
+  val count = 100
 
-  val fftSize = 131072 // in Hz
+  val fftSize = 8 * 1024 // in Hz
   val sampleRate = FFT_BIN_WIDTH * fftSize // sample rate in Hz
 
   val APP_SIZE_X = 1650
@@ -43,7 +43,7 @@ object Main extends JFXApp3 {
   def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label): Unit = {
     val coef = APP_SIZE_Y - 20
     val xOffset = 20
-    val min = 40
+    val min = 60
     val max = 125
     val diff = max - min
     val y = Array.fill(100)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))

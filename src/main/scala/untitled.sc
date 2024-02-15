@@ -1,4 +1,5 @@
-val num = 1000
+val num = (1 to 10).toArray.map(_.toFloat)
 
-(1 to num).filter(i => num % i == 0).foreach(println)
-
+def loop(l: Array[Double]) = {
+  println(l.length)
+}
