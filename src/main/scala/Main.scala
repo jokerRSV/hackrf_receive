@@ -14,9 +14,9 @@ import utils.JavaFXExecutionContext
 import java.util.concurrent.TimeUnit
 
 object Main extends JFXApp3 {
-  val baseBinary = 1024
   val START_FREQUNCEY = 105300000 // in Hz
   var FFT_BIN_WIDTH = 100 // in Hz [20, 25, 40, 50, 100, 125, 150]
+  val baseBinary = 1024
   var FFT_SIZE = 32 * baseBinary // in Hz
   val LNA = 16 // 0 to 40 with 8 step
   val VGA = 10 // 0 to 62 with 2 step
@@ -26,7 +26,6 @@ object Main extends JFXApp3 {
   val APP_SIZE_Y = 750
   val widthImageView = APP_SIZE_X
   val heightImageView = APP_SIZE_Y
-  val offsetY = 0
   val scaleYOffset = 600
   var task: Option[MainFskTask] = None
   //  = new MainFskTask(CENTER_FREQUNCEY, SAMPLE_RATE, FFT_BIT_WIDTH, LNA, VGA)
@@ -37,6 +36,11 @@ object Main extends JFXApp3 {
   val bw = 0
   var isOn = true
 
+  val coef = APP_SIZE_Y - 20
+  val xOffset = 20
+  val min = 0
+  val max = 150
+  val diff = max - min
 
   def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label): Unit = {
     val endFreq = FFT_SIZE * FFT_BIN_WIDTH + START_FREQUNCEY
@@ -44,11 +48,6 @@ object Main extends JFXApp3 {
     println(s"freq start: ${START_FREQUNCEY} bw: ${bw} end: ${endFreq}")
     println(s"fft bin width calc: ${FFT_BIN_WIDTH}")
     println(s"sample rate: ${SAMPLE_RATE}")
-    val coef = APP_SIZE_Y - 20
-    val xOffset = 20
-    val min = 60
-    val max = 125
-    val diff = max - min
     val y = Array.fill(100)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
     val y1000R = Array.fill(100)(255.toByte, 0.toByte, 0.toByte).flatMap(t => Array(t._1, t._2, t._3))
     val y10000G = Array.fill(100)(50.toByte, 255.toByte, 50.toByte).flatMap(t => Array(t._1, t._2, t._3))
@@ -109,7 +108,7 @@ object Main extends JFXApp3 {
                 pixelWriter.setPixels(currentX + xOffset, scaleYOffset + 10, 1, 2, format, y, 0, 0)
               }
 
-              val currYY = (((Math.abs(currentY) - min) / diff) * coef).toInt + offsetY
+              val currYY = coef - (((currentY - min) / diff) * coef).toInt
               val currXX = currentX + xOffset
               if (currXX >= 0 && currYY >= 0 && currXX < roundedX + xOffset && currYY < heightImageView - 1) {
                 pixelWriter.setColor(currXX, currYY, Color.Black)

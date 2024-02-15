@@ -6,7 +6,6 @@ import mavlib.Batterworth2pLPF
 import utils.Utils._
 
 import java.util.concurrent.atomic.AtomicBoolean
-import scala.collection.mutable.ArrayBuffer
 
 class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int, bw: Int, amountCount: Int, isOn: Boolean) extends Task[List[(Double, Double)]] with HackRFSweepDataCallback {
   val isOnAtomic = new AtomicBoolean(isOn)
@@ -20,20 +19,19 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   val lengthFunc: (Array[Double], Int) => Array[Double] =
     (ar, i) => ar.takeWhile(_ <= startFrequncyHz + i)
   val step = 1000 // in Hz
-  val buff = ArrayBuffer.fill(fftSize)(100.0)
+  //  val buff = ArrayBuffer.fill(fftSize)(100.0)
   var count = 0
   val filter = new Batterworth2pLPF()
-  filter.setCutoffFreqFactor(0.01)
+  filter.setCutoffFreqFactor(0.03)
+  filter.reset(100)
 
   override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double]): Unit = {
-    signalPowerdBm
-      .zipWithIndex
-      .foreach { t =>
-        val buffElement = buff(t._2)
-        val calc = (buffElement + filter.apply(Math.abs(t._1))) / 2 + 2
-        val result = if (calc < 0) 0 else calc
-        buff.update(t._2, result)
-      }
+    val min = Math.abs(signalPowerdBm.min)
+    //    val max = Math.abs(signalPowerdBm.max)
+    val signalNorm = signalPowerdBm.map { el =>
+      val n = min - Math.abs(el)
+      filter.apply(n)
+    }
     count += 1
     if (count % amountCount == 0) {
       count = 0
@@ -41,16 +39,15 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
         updateValue {
           //      println(s"start: ${frequencyStart.head.toInt} end: ${frequencyStart.last.toInt} bin width: " +
           //        s"${frequencyStart.drop(1).head.toInt - frequencyStart.head.toInt} size: ${signalPowerdBm.length} == ${frequencyStart.length}")
-          frequencyDomain.zip(buff).toList
+          frequencyDomain.zip(signalNorm).toList
         }
       }
 
-//      val fskLengthFull = lengthFunc(frequencyDomain, 12000).length
-//      val fskLength1kHz = lengthFunc(frequencyDomain, step)
-/*
+      val fskLengthFull = lengthFunc(frequencyDomain, 12000).length
+      val fskLength1kHz = lengthFunc(frequencyDomain, step)
       if (fskLength1kHz.length > 1) {
         frequencyDomain
-          .zip(buff)
+          .zip(signalNorm)
           .dropWhile(_._1 % step != 0)
           .sliding(fskLengthFull, fskLength1kHz.length - 1)
           .toList
@@ -58,8 +55,8 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
           .exists { l =>
             //          val calcCenterRaw = findMeanF(l.map(_._2))
             val calcCenterRaw = calcCoefAmplBand(l.map(_._2))
-            //          val calcCenter = BigDecimal(calcCenterRaw).setScale(1, BigDecimal.RoundingMode.HALF_DOWN).toDouble
-            val calcCenter = calcCenterRaw
+            val calcCenter = BigDecimal(calcCenterRaw).setScale(1, BigDecimal.RoundingMode.HALF_DOWN).toDouble
+            //            val calcCenter = calcCenterRaw
             val center = if (calcCenter == 0) 0.01 else calcCenter
             val headFreq = l.head._1
             val base = next.curried(l).apply(headFreq)
@@ -81,7 +78,6 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
             res
           }
       }
-*/
     }
 
     if (isCancelled) {
