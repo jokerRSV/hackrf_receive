@@ -13,15 +13,14 @@ import utils.JavaFXExecutionContext
 import java.util.concurrent.TimeUnit
 
 object Main extends JFXApp3 {
-  val START_FREQUNCEY = 10400000 // in Hz
-  val FFT_BIN_WIDTH = 250 // in Hz [20, 25, 40, 50, 100, 125, 150]
+  val START_FREQUNCEY = 105300000 // in Hz
+  val FFT_BIN_WIDTH = 100 // in Hz [20, 25, 40, 50, 100, 125, 150]
+  val FFT_SIZE = 32 * 1024 // in Hz
   val LNA = 16 // 0 to 40 with 8 step
-  val VGA = 0 // 0 to 62 with 2 step
-  val count = 100
+  val VGA = 10 // 0 to 62 with 2 step
+  val count = 1
 
-  val fftSize = 8 * 1024 // in Hz
-  val sampleRate = FFT_BIN_WIDTH * fftSize // sample rate in Hz
-
+  val SAMPLE_RATE = FFT_BIN_WIDTH * FFT_SIZE // sample rate in Hz
   val APP_SIZE_X = 1650
   val APP_SIZE_Y = 750
   val widthImageView = APP_SIZE_X
@@ -34,9 +33,10 @@ object Main extends JFXApp3 {
   var freqOffset = 0
   var limitFreq = 0
   println(s"fft bin width calc: ${FFT_BIN_WIDTH}")
-  println(s"sample rate: ${sampleRate}")
-  val endFreq = (131072 - 1) * FFT_BIN_WIDTH + START_FREQUNCEY
-  val bw = endFreq - START_FREQUNCEY
+  println(s"sample rate: ${SAMPLE_RATE}")
+  val endFreq = FFT_SIZE * FFT_BIN_WIDTH + START_FREQUNCEY
+//  val bw = FFT_SIZE * FFT_BIN_WIDTH
+  val bw = 0
   println(s"freq start: ${START_FREQUNCEY} bw: ${bw} end: ${endFreq}")
 
 
@@ -62,7 +62,7 @@ object Main extends JFXApp3 {
 
     }
     //    this.START_FREQUNCEY = scaleX.head._3.toInt / 1000000
-    task = Some(new MainFskTask(START_FREQUNCEY, sampleRate, fftSize, LNA, VGA, bw, count))
+    task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, count))
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>
         clearImage(widthImageView, heightImageView, pixelWriter)
@@ -113,7 +113,7 @@ object Main extends JFXApp3 {
           }
       }
       val thread = new Thread(t)
-      thread.setName(s"${START_FREQUNCEY}_${FFT_BIN_WIDTH}_${fftSize}")
+      thread.setName(s"${START_FREQUNCEY}_${FFT_BIN_WIDTH}_${FFT_SIZE}")
       thread.setDaemon(true)
       thread.start()
     }
