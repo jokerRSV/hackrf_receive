@@ -5,9 +5,16 @@ import javafx.concurrent.Task
 import mavlib.Batterworth2pLPF
 import utils.Utils._
 
+import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.mutable.ArrayBuffer
 
-class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int, bw: Int, amountCount: Int) extends Task[List[(Double, Double)]] with HackRFSweepDataCallback {
+class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int, bw: Int, amountCount: Int, isOn: Boolean) extends Task[List[(Double, Double)]] with HackRFSweepDataCallback {
+  val isOnAtomic = new AtomicBoolean(isOn)
+
+  def updateOnOff(isOn: Boolean): Unit = {
+    isOnAtomic.set(isOn)
+  }
+
   val next: (Seq[(Double, Double)], Double, Int) => Double =
     (xs, base, i) => xs.dropWhile(_._1 < base + i).head._2
   val lengthFunc: (Array[Double], Int) => Array[Double] =
@@ -30,10 +37,12 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
     count += 1
     if (count % amountCount == 0) {
       count = 0
-      updateValue {
-        //      println(s"start: ${frequencyStart.head.toInt} end: ${frequencyStart.last.toInt} bin width: " +
-        //        s"${frequencyStart.drop(1).head.toInt - frequencyStart.head.toInt} size: ${signalPowerdBm.length} == ${frequencyStart.length}")
-        frequencyDomain.zip(buff).toList
+      if (isOnAtomic.get()) {
+        updateValue {
+          //      println(s"start: ${frequencyStart.head.toInt} end: ${frequencyStart.last.toInt} bin width: " +
+          //        s"${frequencyStart.drop(1).head.toInt - frequencyStart.head.toInt} size: ${signalPowerdBm.length} == ${frequencyStart.length}")
+          frequencyDomain.zip(buff).toList
+        }
       }
 
 //      val fskLengthFull = lengthFunc(frequencyDomain, 12000).length

@@ -4,7 +4,7 @@ import scalafx.collections.ObservableBuffer
 import scalafx.geometry.Pos.TopCenter
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.Scene
-import scalafx.scene.control.{Button, ChoiceBox, Label}
+import scalafx.scene.control.{Button, CheckBox, ChoiceBox, Label}
 import scalafx.scene.image.{ImageView, PixelFormat, PixelWriter, WritableImage}
 import scalafx.scene.layout.{BorderPane, HBox, StackPane, VBox}
 import scalafx.scene.paint.Color
@@ -35,13 +35,14 @@ object Main extends JFXApp3 {
   var limitFreq = 0
   //  val bw = FFT_SIZE * FFT_BIN_WIDTH
   val bw = 0
+  var isOn = true
 
 
-  def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label, fftSize: Int, fftBinWidth: Int): Unit = {
-    val endFreq = fftSize * fftBinWidth + START_FREQUNCEY
-    val SAMPLE_RATE = fftBinWidth * fftSize // sample rate in Hz
+  def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label): Unit = {
+    val endFreq = FFT_SIZE * FFT_BIN_WIDTH + START_FREQUNCEY
+    val SAMPLE_RATE = FFT_BIN_WIDTH * FFT_SIZE // sample rate in Hz
     println(s"freq start: ${START_FREQUNCEY} bw: ${bw} end: ${endFreq}")
-    println(s"fft bin width calc: ${fftBinWidth}")
+    println(s"fft bin width calc: ${FFT_BIN_WIDTH}")
     println(s"sample rate: ${SAMPLE_RATE}")
     val coef = APP_SIZE_Y - 20
     val xOffset = 20
@@ -67,16 +68,16 @@ object Main extends JFXApp3 {
 
     }
     //    this.START_FREQUNCEY = scaleX.head._3.toInt / 1000000
-    task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, fftSize, LNA, VGA, bw, count))
+    task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, count, isOn))
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>
         clearImage(widthImageView, heightImageView, pixelWriter)
-        val cutList = list.drop(freqOffset / fftBinWidth)
+        val cutList = list.drop(freqOffset / FFT_BIN_WIDTH)
         val scaleX =
           cutList
             .take(roundedX + 1)
-            .map(t => (((t._1 - cutList.head._1) / fftBinWidth).toInt, t._2, t._1))
-        //            .map(t => (((t._1 - cutList.head._1) / fftBinWidth).toInt, t._2, t._1))
+            .map(t => (((t._1 - cutList.head._1) / FFT_BIN_WIDTH).toInt, t._2, t._1))
+        //            .map(t => (((t._1 - cutList.head._1) / FFT_BIN_WIDTH).toInt, t._2, t._1))
         if (scaleX.nonEmpty) {
           startLabel.text = scaleX.head._3.toInt.toString
           this.limitFreq = scaleX.last._3.toInt
@@ -118,7 +119,7 @@ object Main extends JFXApp3 {
           }
       }
       val thread = new Thread(t)
-      thread.setName(s"${START_FREQUNCEY}_${fftBinWidth}_${fftSize}")
+      thread.setName(s"${START_FREQUNCEY}_${FFT_BIN_WIDTH}_${FFT_SIZE}")
       thread.setDaemon(true)
       thread.start()
     }
@@ -203,7 +204,7 @@ object Main extends JFXApp3 {
     fftSizeChoiceBox.setValue(FFT_SIZE)
     fftSizeChoiceBox.getSelectionModel.selectedItemProperty().addListener { (_, _, newFftSize) =>
       this.FFT_SIZE = newFftSize
-      createMainFskTask(pixelWriter, startLabel, endLabel, newFftSize, this.FFT_BIN_WIDTH)
+      createMainFskTask(pixelWriter, startLabel, endLabel)
     }
     val fftBinWidthChoiceBox = new ChoiceBox[Int]()
     val listBins = ObservableBuffer.from(List(20, 25, 40, 50, 100, 125, 200, 250, 500, 1000, 2000, 2500, 5000))
@@ -211,12 +212,18 @@ object Main extends JFXApp3 {
     fftBinWidthChoiceBox.setValue(FFT_BIN_WIDTH)
     fftBinWidthChoiceBox.getSelectionModel.selectedItemProperty().addListener { (_, _, newBinWidth) =>
       this.FFT_BIN_WIDTH = newBinWidth
-      createMainFskTask(pixelWriter, startLabel, endLabel, this.FFT_SIZE, newBinWidth)
+      createMainFskTask(pixelWriter, startLabel, endLabel)
     }
     hBoxForLabels.children = List(lFastBtn, lSlowBtn, lLowBtn, rLowBtn, rSlowBtn, rFastBtn)
     val hBoxSecondPanel = new HBox()
     hBoxSecondPanel.alignment = TopCenter
-    hBoxSecondPanel.children = List(fftSizeChoiceBox, fftBinWidthChoiceBox)
+    val onOffDisplay = new CheckBox()
+    onOffDisplay.selected = this.isOn
+    onOffDisplay.selectedProperty().addListener{ (_, _, nv) =>
+      this.isOn = nv
+      this.task.foreach(_.updateOnOff(this.isOn))
+    }
+    hBoxSecondPanel.children = List(fftSizeChoiceBox, fftBinWidthChoiceBox, onOffDisplay)
     vBoxForControlPanel.children = List(hBoxForLabels, hBoxSecondPanel)
     val stackPane = new StackPane()
     //    stackPane.prefWidth = widthImageView
@@ -256,7 +263,7 @@ object Main extends JFXApp3 {
       println(s"the task state${task.map(_.isRunning)}")
     }
 
-    createMainFskTask(pixelWriter, startLabel, endLabel, FFT_SIZE, FFT_BIN_WIDTH)
+    createMainFskTask(pixelWriter, startLabel, endLabel)
 
   }
 }
