@@ -15,12 +15,12 @@ import java.util.concurrent.TimeUnit
 
 object Main extends JFXApp3 {
   val START_FREQUNCEY = 105300000 // in Hz
-  var FFT_BIN_WIDTH = 100 // in Hz [20, 25, 40, 50, 100, 125, 150]
+  var FFT_BIN_WIDTH = 20 // in Hz [20, 25, 40, 50, 100, 125, 150]
   val baseBinary = 1024
-  var FFT_SIZE = 32 * baseBinary // in Hz
+  var FFT_SIZE = 128 * baseBinary // in Hz
   val LNA = 32 // 0 to 40 with 8 step
   val VGA = 10 // 0 to 62 with 2 step
-  val count = 1
+  var counterLimit = 5
 
   val APP_SIZE_X = 1650
   val APP_SIZE_Y = 750
@@ -38,7 +38,7 @@ object Main extends JFXApp3 {
 
   val coef = APP_SIZE_Y - 20
   val xOffset = 20
-  val min = 0
+  val min = 30
   val max = 150
   val diff = max - min
 
@@ -70,7 +70,7 @@ object Main extends JFXApp3 {
 
     }
     //    this.START_FREQUNCEY = scaleX.head._3.toInt / 1000000
-    task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, count, isOn))
+    task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, counterLimit, isOn))
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>
         clearImage(pixelWriter)
@@ -214,13 +214,21 @@ object Main extends JFXApp3 {
     hBoxForLabels.children = List(lFastBtn, lSlowBtn, lLowBtn, rLowBtn, rSlowBtn, rFastBtn)
     val hBoxSecondPanel = new HBox()
     hBoxSecondPanel.alignment = TopCenter
+    val counterLimitChoiceBox = new ChoiceBox[Int]()
+    val counterLimitList = ObservableBuffer.from((1 to 100))
+    counterLimitChoiceBox.setItems(counterLimitList)
+    counterLimitChoiceBox.setValue(counterLimit)
+    counterLimitChoiceBox.getSelectionModel.selectedItemProperty().addListener { (_, _, newCounter) =>
+      this.counterLimit = newCounter
+      this.task.foreach(_.updateCounterLimit(newCounter))
+    }
     val onOffDisplay = new CheckBox()
     onOffDisplay.selected = this.isOn
     onOffDisplay.selectedProperty().addListener{ (_, _, nv) =>
       this.isOn = nv
       this.task.foreach(_.updateOnOff(this.isOn))
     }
-    hBoxSecondPanel.children = List(fftSizeChoiceBox, fftBinWidthChoiceBox, onOffDisplay)
+    hBoxSecondPanel.children = List(fftSizeChoiceBox, fftBinWidthChoiceBox, counterLimitChoiceBox, onOffDisplay)
     vBoxForControlPanel.children = List(hBoxForLabels, hBoxSecondPanel)
     val stackPane = new StackPane()
     //    stackPane.prefWidth = widthImageView
