@@ -86,7 +86,7 @@ object Main extends JFXApp3 {
         if (scaleX.nonEmpty) {
           startLabel.text = scaleX.head._3.toInt.toString
           this.limitFreq = scaleX.last._3.toInt
-          endLabel.text = scaleX.last._3.toInt.toString
+          endLabel.text = s"${scaleX.last._3.toInt.toString}\n${endFreq}"
         }
 
         //draw main x-axis
@@ -258,7 +258,6 @@ object Main extends JFXApp3 {
     startFreqField.prefHeight = 30
     startFreqField.setText(this.START_FREQUNCEY.toString)
     startFreqField.onKeyPressed = (action: KeyEvent) => {
-      println(action)
       if (action.getCode == javafx.scene.input.KeyCode.ENTER) {
         this.START_FREQUNCEY = startFreqField.getText.toInt
         this.freqOffset = 0
