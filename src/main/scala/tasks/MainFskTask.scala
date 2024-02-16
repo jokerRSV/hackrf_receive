@@ -4,15 +4,22 @@ import hackrf.{HackRFSweepDataCallback, HackRFSweepNativeBridge}
 import javafx.concurrent.Task
 import mavlib.Batterworth2pLPF
 
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReference}
 import scala.collection.mutable.ArrayBuffer
 
-class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int, bw: Int, amountCount: Int, isOn: Boolean) extends Task[Array[(Double, Double)]] with HackRFSweepDataCallback {
+class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int, bw: Int, amountCount: Int, isOn: Boolean, factor: Double) extends Task[Array[(Double, Double)]] with HackRFSweepDataCallback {
   val isOnAtomic = new AtomicBoolean(isOn)
   val counterLimitAtomic = new AtomicInteger(amountCount)
+  val filterFactorAtomic = new AtomicReference(0.03)
 
   def updateOnOff(isOn: Boolean): Unit = {
     isOnAtomic.set(isOn)
+  }
+
+  def updateFilterFactor(factor: Double): Unit = {
+    filterFactorAtomic.set(factor)
+    filter.setCutoffFreqFactor(factor)
+    filter.reset(-100)
   }
 
   def updateCounterLimit(c: Int): Unit = {
@@ -22,8 +29,9 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   //  val detectorFSKTask = new DetectorFSKTask(startFrequncyHz)
   var count = 0
   val filter = new Batterworth2pLPF()
-  filter.setCutoffFreqFactor(0.01)
-  filter.reset(-100)
+  updateFilterFactor(factor)
+//  filter.setCutoffFreqFactor(filterFactorAtomic.get())
+//  filter.reset(-100)
   var buff = ArrayBuffer.fill(fftSize)(-100.0)
 
   override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double]): Unit = {

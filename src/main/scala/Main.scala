@@ -4,7 +4,7 @@ import scalafx.collections.ObservableBuffer
 import scalafx.geometry.Pos.TopCenter
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.Scene
-import scalafx.scene.control.{Button, CheckBox, ChoiceBox, Label}
+import scalafx.scene.control.{Button, CheckBox, ChoiceBox, Label, Slider}
 import scalafx.scene.image.{ImageView, PixelFormat, PixelWriter, WritableImage}
 import scalafx.scene.layout.{BorderPane, HBox, StackPane, VBox}
 import scalafx.scene.paint.Color
@@ -21,6 +21,7 @@ object Main extends JFXApp3 {
   val LNA = 32 // 0 to 40 with 8 step
   val VGA = 10 // 0 to 62 with 2 step
   var counterLimit = 5
+  var freqFactor = 0.03
 
   val APP_SIZE_X = 1650
   val APP_SIZE_Y = 750
@@ -70,7 +71,7 @@ object Main extends JFXApp3 {
 
     }
     //    this.START_FREQUNCEY = scaleX.head._3.toInt / 1000000
-    task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, counterLimit, isOn))
+    task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, counterLimit, isOn, this.freqFactor))
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>
         clearImage(pixelWriter)
@@ -228,8 +229,30 @@ object Main extends JFXApp3 {
       this.isOn = nv
       this.task.foreach(_.updateOnOff(this.isOn))
     }
+    val slider = new Slider(0.000, 0.09, freqFactor)
+    slider.margin = Insets(0, 0, 0, 2)
+    slider.padding = Insets(10, 0, 0, 15)
+    slider.setPrefSize(310, 45)
+    slider.setShowTickLabels(true)
+    slider.setShowTickMarks(true)
+    slider.setMajorTickUnit(0.01)
+    slider.setMinorTickCount(0)
+    slider.setSnapToTicks(false)
+    slider.setBlockIncrement(0.001)
+    val fraction = Label(slider.getValue.toString)
+    fraction.margin = Insets(10, 0, 0, 20)
+    fraction.prefWidth = 130
+    slider.value.addListener { (_, _, newV) =>
+      val v = BigDecimal(newV.doubleValue()).setScale(3, BigDecimal.RoundingMode.HALF_UP)
+      fraction.setText(v.toString())
+      this.freqFactor = v.doubleValue
+      this.task.foreach(_.updateFilterFactor(this.freqFactor))
+    }
+
+    val sliderHBox = new HBox()
+    sliderHBox.children = List(slider, fraction)
     hBoxSecondPanel.children = List(fftSizeChoiceBox, fftBinWidthChoiceBox, counterLimitChoiceBox, onOffDisplay)
-    vBoxForControlPanel.children = List(hBoxForLabels, hBoxSecondPanel)
+    vBoxForControlPanel.children = List(hBoxForLabels, hBoxSecondPanel, sliderHBox)
     val stackPane = new StackPane()
     //    stackPane.prefWidth = widthImageView
     //    stackPane.prefHeight = heightImageView
