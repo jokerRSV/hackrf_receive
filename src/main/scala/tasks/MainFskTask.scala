@@ -52,7 +52,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
           .sliding(fskLengthFull, fskLength1kHz.length - 1)
           .toList
           .filter(_.length == fskLengthFull)
-          .exists { l =>
+          .foreach { l =>
             //          val calcCenterRaw = findMeanF(l.map(_._2))
             val calcCenterRaw = calcCoefAmplBand(l.map(_._2))
             val calcCenter = BigDecimal(calcCenterRaw).setScale(1, BigDecimal.RoundingMode.HALF_DOWN).toDouble
@@ -64,18 +64,25 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
             //        val f = base(4000)
             //        val five = base(8000)
             //        val ten = l.last
+            val b0 = base(0)
+            val b4 = base(4000)
+            val b8 = base(8000)
+            val b12 = l.last._2
+            val b2 = base(2000)
+            val b6 = base(6000)
+            val b10 = base(10000)
             val res =
-            base(0) >= center &&
-              base(4000) >= center &&
-              base(8000) >= center &&
-              l.last._2 >= center &&
-              base(2000) < center &&
-              base(6000) < center &&
-              base(10000) < center
+              b0 >= center &&
+                b4 >= center &&
+                b8 >= center &&
+                b12 >= center &&
+                b2 < center &&
+                b6 < center &&
+                b10 < center
             if (res) {
-              println(s"find start freq: ${l.head} end: ${l.last} center lvl: ${calcCenter}")
+              println(s"find start freq: ${l.head} end: ${l.last} center lvl: ${calcCenter}_____b0: ${b0}__b4: ${b4}__b4: ${b4}__b12: ${b12}______b2: ${b2}__b6: ${b6}__b10: ${b10}")
             }
-            res
+//            res
           }
       }
     }
