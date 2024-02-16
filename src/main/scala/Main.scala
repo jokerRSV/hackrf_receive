@@ -18,7 +18,7 @@ object Main extends JFXApp3 {
   var FFT_BIN_WIDTH = 100 // in Hz [20, 25, 40, 50, 100, 125, 150]
   val baseBinary = 1024
   var FFT_SIZE = 32 * baseBinary // in Hz
-  val LNA = 16 // 0 to 40 with 8 step
+  val LNA = 32 // 0 to 40 with 8 step
   val VGA = 10 // 0 to 62 with 2 step
   val count = 1
 
@@ -42,18 +42,21 @@ object Main extends JFXApp3 {
   val max = 150
   val diff = max - min
 
+  val yScaleB = Array.fill(xOffset * scaleYOffset)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
+  val y1000000B = Array.fill(100)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
+  val y100000B = Array.fill(100)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
+  val y1000R = Array.fill(100)(255.toByte, 0.toByte, 0.toByte).flatMap(t => Array(t._1, t._2, t._3))
+  val y10000G = Array.fill(100)(50.toByte, 255.toByte, 50.toByte).flatMap(t => Array(t._1, t._2, t._3))
+  val fillY = Array.fill(3)(0.toByte, 150.toByte, 255.toByte).flatMap(t => Array(t._1, t._2, t._3))
+  val format = PixelFormat.getByteRgbInstance
+  val roundedX = widthImageView / 100 * 100
+
   def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label): Unit = {
     val endFreq = FFT_SIZE * FFT_BIN_WIDTH + START_FREQUNCEY
     val SAMPLE_RATE = FFT_BIN_WIDTH * FFT_SIZE // sample rate in Hz
-    println(s"freq start: ${START_FREQUNCEY} bw: ${bw} end: ${endFreq}")
+    println(s"freq start: ${START_FREQUNCEY} bw: ${endFreq - START_FREQUNCEY} end: ${endFreq}")
     println(s"fft bin width calc: ${FFT_BIN_WIDTH}")
     println(s"sample rate: ${SAMPLE_RATE}")
-    val y = Array.fill(100)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
-    val y1000R = Array.fill(100)(255.toByte, 0.toByte, 0.toByte).flatMap(t => Array(t._1, t._2, t._3))
-    val y10000G = Array.fill(100)(50.toByte, 255.toByte, 50.toByte).flatMap(t => Array(t._1, t._2, t._3))
-    val fillY = Array.fill(3)(0.toByte, 150.toByte, 255.toByte).flatMap(t => Array(t._1, t._2, t._3))
-    val format = PixelFormat.getByteRgbInstance
-    val roundedX = widthImageView / 100 * 100
 
     task match {
       case Some(value) =>
@@ -70,7 +73,7 @@ object Main extends JFXApp3 {
     task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, count, isOn))
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>
-        clearImage(widthImageView, heightImageView, pixelWriter)
+        clearImage(pixelWriter)
         val cutList = list.drop(freqOffset / FFT_BIN_WIDTH)
         val scaleX =
           cutList
@@ -83,6 +86,8 @@ object Main extends JFXApp3 {
           endLabel.text = scaleX.last._3.toInt.toString
         }
 
+        //draw main x-axis
+        pixelWriter.setPixels(xOffset, scaleYOffset + 10, widthImageView, 2, format, yScaleB, 0, 0)
         scaleX
           .foreach {
             case (currentX, currentY, currScale) =>
@@ -90,10 +95,10 @@ object Main extends JFXApp3 {
                 //draw scale every 1M
                 val base = currScale.toInt - START_FREQUNCEY
                 if (base % 1000000 == 0) {
-                  pixelWriter.setPixels(currentX + xOffset, scaleYOffset - 18, 4, 30, format, y, 0, 0)
+                  pixelWriter.setPixels(currentX + xOffset, scaleYOffset - 18, 4, 30, format, y1000000B, 0, 0)
                   //draw scale every 100k
                 } else if (base % 100000 == 0) {
-                  pixelWriter.setPixels(currentX + xOffset - 1, scaleYOffset - 5, 3, 15, format, y, 0, 0)
+                  pixelWriter.setPixels(currentX + xOffset - 1, scaleYOffset - 5, 3, 15, format, y100000B, 0, 0)
                   //draw scale every 10k
                 } else if (base % 10000 == 0) {
                   pixelWriter.setPixels(currentX + xOffset - 1, scaleYOffset + 3, 3, 7, format, y10000G, 0, 0)
@@ -101,10 +106,10 @@ object Main extends JFXApp3 {
                 } else if (base % 1000 == 0) {
                   pixelWriter.setPixels(currentX + xOffset - 1, scaleYOffset + 5, 3, 5, format, y1000R, 0, 0)
                 }
-                pixelWriter.setPixels(currentX + xOffset, scaleYOffset + 10, 1, 2, format, y, 0, 0)
               }
 
-              val currYY = coef - (((currentY - min) / diff) * coef).toInt
+//              val currYY = coef - (((currentY - min) / diff) * coef).toInt
+              val currYY = (((Math.abs(currentY) - min) / diff) * coef).toInt
               val currXX = currentX + xOffset
               if (currXX >= 0 && currYY >= 0 && currXX < roundedX + xOffset && currYY < heightImageView - 1) {
                 pixelWriter.setColor(currXX, currYY, Color.Black)
@@ -119,14 +124,11 @@ object Main extends JFXApp3 {
       thread.start()
     }
   }
+  val fillWhite = Array.fill(APP_SIZE_X * heightImageView)(255.toByte, 255.toByte, 255.toByte).flatMap(t => Array(t._1, t._2, t._3))
 
-  private def clearImage(width: Int, height: Int, pixelWriter: PixelWriter) =
-    for {
-      x <- (0 until width)
-      y <- (0 until height)
-    } yield {
-      pixelWriter.setColor(x, y, Color.White)
-    }
+  private def clearImage(pixelWriter: PixelWriter) = {
+      pixelWriter.setPixels(20, 20, widthImageView, scaleYOffset, format, fillWhite, 0, 0)
+  }
 
   private def createImage(writableImage: WritableImage): ImageView = {
     val imageView = new ImageView()

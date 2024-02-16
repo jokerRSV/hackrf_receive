@@ -14,17 +14,16 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
     isOnAtomic.set(isOn)
   }
 
-  //  val buff = ArrayBuffer.fill(fftSize)(100.0)
+//  val detectorFSKTask = new DetectorFSKTask(startFrequncyHz)
   var count = 0
   val filter = new Batterworth2pLPF()
   filter.setCutoffFreqFactor(0.03)
   filter.reset(100)
 
   override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double]): Unit = {
-//    val min = Math.abs(signalPowerdBm.min)
+    //    val min = Math.abs(signalPowerdBm.min)
     val signalNorm = signalPowerdBm.map { el =>
-      val n = 160 - Math.abs(el)
-      filter.apply(n)
+      filter.apply(el)
     }
     count += 1
     if (count % amountCount == 0) {
