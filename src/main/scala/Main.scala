@@ -1,11 +1,13 @@
 import scalafx.Includes._
 import scalafx.application.JFXApp3
 import scalafx.collections.ObservableBuffer
+import scalafx.event.ActionEvent
 import scalafx.geometry.Pos.TopCenter
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.Scene
-import scalafx.scene.control.{Button, CheckBox, ChoiceBox, Label, Slider}
+import scalafx.scene.control._
 import scalafx.scene.image.{ImageView, PixelFormat, PixelWriter, WritableImage}
+import scalafx.scene.input.{KeyCode, KeyEvent}
 import scalafx.scene.layout.{BorderPane, HBox, StackPane, VBox}
 import scalafx.scene.paint.Color
 import tasks.MainFskTask
@@ -14,7 +16,7 @@ import utils.JavaFXExecutionContext
 import java.util.concurrent.TimeUnit
 
 object Main extends JFXApp3 {
-  val START_FREQUNCEY = 105300000 // in Hz
+  var START_FREQUNCEY = 105300000 // in Hz
   var FFT_BIN_WIDTH = 20 // in Hz [20, 25, 40, 50, 100, 125, 150]
   val baseBinary = 1024
   var FFT_SIZE = 128 * baseBinary // in Hz
@@ -109,7 +111,7 @@ object Main extends JFXApp3 {
                 }
               }
 
-//              val currYY = coef - (((currentY - min) / diff) * coef).toInt
+              //              val currYY = coef - (((currentY - min) / diff) * coef).toInt
               val currYY = (((Math.abs(currentY) - min) / diff) * coef).toInt
               val currXX = currentX + xOffset
               if (currXX >= 0 && currYY >= 0 && currXX < roundedX + xOffset && currYY < heightImageView - 1) {
@@ -125,10 +127,11 @@ object Main extends JFXApp3 {
       thread.start()
     }
   }
+
   val fillWhite = Array.fill(APP_SIZE_X * heightImageView)(255.toByte, 255.toByte, 255.toByte).flatMap(t => Array(t._1, t._2, t._3))
 
   private def clearImage(pixelWriter: PixelWriter) = {
-      pixelWriter.setPixels(20, 20, widthImageView, scaleYOffset, format, fillWhite, 0, 0)
+    pixelWriter.setPixels(20, 20, widthImageView, scaleYOffset, format, fillWhite, 0, 0)
   }
 
   private def createImage(writableImage: WritableImage): ImageView = {
@@ -225,7 +228,7 @@ object Main extends JFXApp3 {
     }
     val onOffDisplay = new CheckBox()
     onOffDisplay.selected = this.isOn
-    onOffDisplay.selectedProperty().addListener{ (_, _, nv) =>
+    onOffDisplay.selectedProperty().addListener { (_, _, nv) =>
       this.isOn = nv
       this.task.foreach(_.updateOnOff(this.isOn))
     }
@@ -249,9 +252,22 @@ object Main extends JFXApp3 {
       this.task.foreach(_.updateFilterFactor(this.freqFactor))
     }
 
+    val startFreqField = new TextField()
+    //    startFreqField.setTextFormatter(new TextFormatter(new IntegerStringConverter()))
+    startFreqField.prefWidth = 100
+    startFreqField.prefHeight = 30
+    startFreqField.setText(this.START_FREQUNCEY.toString)
+    startFreqField.onKeyPressed = (action: KeyEvent) => {
+      println(action)
+      if (action.getCode == javafx.scene.input.KeyCode.ENTER) {
+        this.START_FREQUNCEY = startFreqField.getText.toInt
+        this.freqOffset = 0
+        createMainFskTask(pixelWriter, startLabel, endLabel)
+      }
+    }
     val sliderHBox = new HBox()
     sliderHBox.children = List(slider, fraction)
-    hBoxSecondPanel.children = List(fftSizeChoiceBox, fftBinWidthChoiceBox, counterLimitChoiceBox, onOffDisplay)
+    hBoxSecondPanel.children = List(startFreqField, fftSizeChoiceBox, fftBinWidthChoiceBox, counterLimitChoiceBox, onOffDisplay)
     vBoxForControlPanel.children = List(hBoxForLabels, hBoxSecondPanel, sliderHBox)
     val stackPane = new StackPane()
     //    stackPane.prefWidth = widthImageView
