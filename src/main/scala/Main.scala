@@ -86,10 +86,6 @@ object Main extends JFXApp3 {
         scaleX
           .foreach {
             case (currentX, currentY, currScale) =>
-              //            if (currScale == scaleX.last._3 || currScale == scaleX.head._3) {
-              /*draw start/end frequncy's scale*/
-              //              pixelWriter.setPixels(currentX + xOffset, scaleYOffset - 2, 3, 20, format, y, 0, 0)
-              //            }
               if (currentX < roundedX - 1) {
                 //draw scale every 1M
                 val base = currScale.toInt - START_FREQUNCEY
