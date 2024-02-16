@@ -17,9 +17,9 @@ import java.util.concurrent.TimeUnit
 
 object Main extends JFXApp3 {
   var START_FREQUNCEY = 105300000 // in Hz
-  var FFT_BIN_WIDTH = 20 // in Hz [20, 25, 40, 50, 100, 125, 150]
+  var FFT_BIN_WIDTH = 200 // in Hz [20, 25, 40, 50, 100, 125, 150]
   val baseBinary = 1024
-  var FFT_SIZE = 128 * baseBinary // in Hz
+  var FFT_SIZE = 65 * baseBinary // in Hz
   val LNA = 32 // 0 to 40 with 8 step
   val VGA = 10 // 0 to 62 with 2 step
   var counterLimit = 5
@@ -31,8 +31,6 @@ object Main extends JFXApp3 {
   val heightImageView = APP_SIZE_Y
   val scaleYOffset = 600
   var task: Option[MainFskTask] = None
-  //  = new MainFskTask(CENTER_FREQUNCEY, SAMPLE_RATE, FFT_BIT_WIDTH, LNA, VGA)
-  //  var taskDetector = new DetectorFSKTask(pis)
   var freqOffset = 0
   var limitFreq = 0
   //  val bw = FFT_SIZE * FFT_BIN_WIDTH
@@ -72,17 +70,17 @@ object Main extends JFXApp3 {
       case None => println("no tasks")
 
     }
-    //    this.START_FREQUNCEY = scaleX.head._3.toInt / 1000000
     task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, counterLimit, isOn, this.freqFactor))
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>
-        clearImage(pixelWriter)
-        val cutList = list.drop(freqOffset / FFT_BIN_WIDTH)
+        val (cutList, sweepDone) = (list._1.drop(freqOffset / FFT_BIN_WIDTH), list._2)
+        if (sweepDone) {
+          clearImage(pixelWriter)
+        }
         val scaleX =
           cutList
             .take(roundedX + 1)
             .map(t => (((t._1 - cutList.head._1) / FFT_BIN_WIDTH).toInt, t._2, t._1))
-        //            .map(t => (((t._1 - cutList.head._1) / FFT_BIN_WIDTH).toInt, t._2, t._1))
         if (scaleX.nonEmpty) {
           startLabel.text = scaleX.head._3.toInt.toString
           this.limitFreq = scaleX.last._3.toInt

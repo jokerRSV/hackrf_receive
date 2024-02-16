@@ -7,7 +7,7 @@ import mavlib.Batterworth2pLPF
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReference}
 import scala.collection.mutable.ArrayBuffer
 
-class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int, bw: Int, amountCount: Int, isOn: Boolean, factor: Double) extends Task[Array[(Double, Double)]] with HackRFSweepDataCallback {
+class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int, bw: Int, amountCount: Int, isOn: Boolean, factor: Double) extends Task[(Array[(Double, Double)], Boolean)] with HackRFSweepDataCallback {
   val isOnAtomic = new AtomicBoolean(isOn)
   val counterLimitAtomic = new AtomicInteger(amountCount)
   val filterFactorAtomic = new AtomicReference(0.03)
@@ -34,10 +34,10 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
 //  filter.reset(-100)
   var buff = ArrayBuffer.fill(fftSize)(-100.0)
 
-  override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double]): Unit = {
+  override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double], sweepDone: Boolean): Unit = {
     //    val min = Math.abs(signalPowerdBm.min)
     buff = buff.zip(signalPowerdBm).map { tuple =>
-      val mean = (tuple._1 + tuple._2) / 2
+      val mean = (tuple._1 + (tuple._2)) / 2
       val v = filter.apply(mean)
       v
     }
@@ -46,7 +46,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
       count = 0
       if (isOnAtomic.get()) {
         updateValue {
-          frequencyDomain.zip(buff)
+          (frequencyDomain.zip(buff), sweepDone)
         }
       }
     }
@@ -57,11 +57,11 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
     }
   }
 
-  override def call(): Array[(Double, Double)] = {
+  override def call(): (Array[(Double, Double)], Boolean) = {
     HackRFSweepNativeBridge.start(this, startFrequncyHz, sampleRate, fftSize, lna, vga, bw)
     println("task completed!!")
     HackRFSweepNativeBridge.stop()
-    Array.empty
+    (Array.empty, false)
   }
 }
 
