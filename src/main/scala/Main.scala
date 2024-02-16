@@ -19,7 +19,7 @@ object Main extends JFXApp3 {
   var START_FREQUNCEY = 105300000 // in Hz
   var FFT_BIN_WIDTH = 200 // in Hz [20, 25, 40, 50, 100, 125, 150]
   val baseBinary = 1024
-  var FFT_SIZE = 65 * baseBinary // in Hz
+  var FFT_SIZE = 64 * baseBinary // in Hz
   val LNA = 32 // 0 to 40 with 8 step
   val VGA = 10 // 0 to 62 with 2 step
   var counterLimit = 5
@@ -217,12 +217,12 @@ object Main extends JFXApp3 {
     val hBoxSecondPanel = new HBox()
     hBoxSecondPanel.alignment = TopCenter
     val counterLimitChoiceBox = new ChoiceBox[Int]()
-    val counterLimitList = ObservableBuffer.from((1 to 100))
+    val counterLimitList = ObservableBuffer.from((1 to 100).toList)
     counterLimitChoiceBox.setItems(counterLimitList)
     counterLimitChoiceBox.setValue(counterLimit)
     counterLimitChoiceBox.getSelectionModel.selectedItemProperty().addListener { (_, _, newCounter) =>
       this.counterLimit = newCounter
-      this.task.foreach(_.updateCounterLimit(newCounter))
+      this.task.foreach(_.updateCounterLimit(this.counterLimit))
     }
     val onOffDisplay = new CheckBox()
     onOffDisplay.selected = this.isOn
