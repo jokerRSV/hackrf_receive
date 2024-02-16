@@ -39,7 +39,7 @@ object Main extends JFXApp3 {
 
   val coef = APP_SIZE_Y - 20
   val xOffset = 20
-  val min = 30
+  val min = 0
   val max = 150
   val diff = max - min
 

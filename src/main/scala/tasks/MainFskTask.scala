@@ -30,12 +30,13 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   var count = 0
   val filter = new Batterworth2pLPF()
   updateFilterFactor(factor)
-//  filter.setCutoffFreqFactor(filterFactorAtomic.get())
-//  filter.reset(-100)
+  //  filter.setCutoffFreqFactor(filterFactorAtomic.get())
+  //  filter.reset(-100)
   var buff = ArrayBuffer.fill(fftSize)(-100.0)
 
   override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double], sweepDone: Boolean): Unit = {
-    //    val min = Math.abs(signalPowerdBm.min)
+    val min = Math.abs(signalPowerdBm.min)
+    val max = Math.abs(signalPowerdBm.max)
     buff = buff.zip(signalPowerdBm).map { tuple =>
       val mean = (tuple._1 + (tuple._2)) / 2
       val v = filter.apply(mean)
