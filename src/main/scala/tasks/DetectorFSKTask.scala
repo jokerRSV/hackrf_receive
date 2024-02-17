@@ -3,31 +3,38 @@ package tasks
 import javafx.concurrent.Task
 import utils.Utils.calcCoefAmplBand
 
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 
-class DetectorFSKTask(startFrequncyHz: Int) extends Task[Unit] {
-
+class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
+  println("init detector")
   val next: (Seq[(Double, Double)], Double, Int) => Double =
     (xs, base, i) => xs.dropWhile(_._1 < base + i).head._2
-  val lengthFunc: (Array[Double], Int) => Array[Double] =
-    (ar, i) => ar.takeWhile(_ <= startFrequncyHz + i)
+  val lengthFunc: (Array[(Double, Double)], Int) => Array[(Double, Double)] =
+    (ar, i) => ar.takeWhile(_._1 <= startFrequncyHz + i)
   val step = 1000 // in Hz
 
-  val atomicFreqDomain = new AtomicReference[Tuple2[Array[Double], Array[Double]]]((Array.empty, Array.empty))
+  val atomicFreqDomain = new AtomicReference[Array[(Double, Double)]](Array.empty)
+  val isCancelled = new AtomicBoolean(false)
 
-  def updateFreqDomain(frequencyDomain: Array[Double], signalPowerdBm: Array[Double]): Unit = {
-    atomicFreqDomain.set((frequencyDomain, signalPowerdBm))
+  def updateFreqDomain(zippedFreqDomain: Array[(Double, Double)]): Unit = {
+    val v = atomicFreqDomain.set(zippedFreqDomain)
+    v
   }
 
-  override def call(): Unit = {
+  def cancel(): Unit = {
+    println("stopping detector task")
+    isCancelled.set(true)
+  }
+
+  override def run(): Unit = {
+    println("start detector task")
+
     def loop(): Unit = {
-      val frequencyDomain = atomicFreqDomain.get()._1
-      val signalNorm = atomicFreqDomain.get()._2
+      val frequencyDomain = atomicFreqDomain.get()
       val fskLengthFull = lengthFunc(frequencyDomain, 12000).length
       val fskLength1kHz = lengthFunc(frequencyDomain, step)
       if (fskLength1kHz.length > 1) {
         frequencyDomain
-          .zip(signalNorm)
           .dropWhile(_._1 % step != 0)
           .sliding(fskLengthFull, fskLength1kHz.length - 1)
           .toList
@@ -54,14 +61,19 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Task[Unit] {
                 b6 < center &&
                 b10 < center
             if (res) {
-              println(s"find start freq: ${l.head} end: ${l.last} center lvl: ${calcCenter}_____b0: ${b0}__b4: ${b4}__b4: ${b4}__b12: ${b12}______b2: ${b2}__b6: ${b6}__b10: ${b10}")
+              println(s"start freq: ${l.head} center lvl: ${calcCenter}_____b0: ${b0}__b4: ${b4}__b4: ${b4}__b12: ${b12}______b2: ${b2}__b6: ${b6}__b10: ${b10}")
             }
           }
       }
+      loop()
     }
 
-    if (!isCancelled) {
-      loop()
+    if (!isCancelled.get()) {
+      try {
+        loop()
+      } catch {
+        case e: Exception => e.printStackTrace()
+      }
     } else {
       println("completing detector task")
     }
