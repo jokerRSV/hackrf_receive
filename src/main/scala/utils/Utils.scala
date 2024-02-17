@@ -7,7 +7,7 @@ import scala.util.Try
 object Utils {
 
   def calcCoefAmplBand(buff: Array[Double]): Double = {
-    val bytes = buff.map(d => BigDecimal(d).setScale(2, BigDecimal.RoundingMode.DOWN).toDouble)
+    val bytes = buff.map(d => BigDecimal(255 - d).setScale(2, BigDecimal.RoundingMode.DOWN).toDouble)
     val entropy = getEntropy(bytes)
     calcCoef(entropy)
     //        val b = buff
@@ -25,16 +25,10 @@ object Utils {
   }
 
   def findMean(buff: Seq[Double]): Double = {
-    val bytes =
-      buff
-        .map(d => BigDecimal(d).setScale(2, BigDecimal.RoundingMode.DOWN).toDouble)
-        .filter(_ > 0)
-    val sum = bytes.sum
-    if (sum > 0) {
-      sum / bytes.length
-    } else {
-      0
-    }
+    val min = buff.min
+    val max = buff.max
+
+    (max - min) / 2 + min
   }
 
   def findMeanF(buff: Seq[Float]): Double = {

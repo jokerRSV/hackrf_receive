@@ -16,11 +16,11 @@ import utils.JavaFXExecutionContext
 import java.util.concurrent.TimeUnit
 
 object Main extends JFXApp3 {
-  var START_FREQUNCEY = 105300000 // in Hz
+  var START_FREQUNCEY = 105900000 // in Hz
   var SAMPLE_RATE = 2621440 // sample rate in Hz
   //  var FFT_BIN_WIDTH = 20 // in Hz [20, 25, 40, 50, 100, 125, 150]
   val baseBinary = 1024
-  var FFT_SIZE = 4 * baseBinary // in Hz
+  var FFT_SIZE = 128 * baseBinary // in Hz
   val LNA = 32 // 0 to 40 with 8 step
   val VGA = 10 // 0 to 62 with 2 step
   var counterLimit = 5
@@ -112,8 +112,8 @@ object Main extends JFXApp3 {
                 }
               }
 
-              //              val currYY = coef - (((currentY - min) / diff) * coef).toInt
-              val currYY = (((currentY - min) / diff) * coef).toInt
+              //val currYY = coef - (((currentY - min) / diff) * coef).toInt
+              val currYY = (((-currentY - min) / diff) * coef).toInt
               val currXX = currentX + xOffset
               if (currXX >= 0 && currYY >= 0 && currXX < roundedX + xOffset && currYY < heightImageView - 1) {
                 pixelWriter.setColor(currXX, currYY, Color.Black)

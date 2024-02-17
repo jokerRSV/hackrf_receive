@@ -12,6 +12,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   val isOnAtomic = new AtomicBoolean(isOn)
   val counterLimitAtomic = new AtomicInteger(amountCount)
   val filterFactorAtomic = new AtomicReference(0.03)
+  val default = -100.0
 
   def updateOnOff(isOn: Boolean): Unit = {
     isOnAtomic.set(isOn)
@@ -20,7 +21,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   def updateFilterFactor(factor: Double): Unit = {
     filterFactorAtomic.set(factor)
     filter.setCutoffFreqFactor(factor)
-    filter.reset(-100)
+    filter.reset(default)
   }
 
   def updateCounterLimit(c: Int): Unit = {
@@ -30,13 +31,13 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   var count = 0
   val filter = new Batterworth2pLPF()
   updateFilterFactor(factor)
-  var buff = ArrayBuffer.fill(fftSize)(100.0)
+  var buff = ArrayBuffer.fill(fftSize)(default)
 
   override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double], sweepDone: Boolean, fftBinWidth: Double): Unit = {
-    println(s"${frequencyDomain.head}___${signalPowerdBm.head}")
+//    println(s"${frequencyDomain.head}___${signalPowerdBm.head}")
     buff = buff.zip(signalPowerdBm).map { tuple =>
       //remove minus value
-      val mean = (tuple._1 - tuple._2) / 2
+      val mean = (tuple._1 + tuple._2) / 2
       val v = filter.apply(mean)
       v
     }

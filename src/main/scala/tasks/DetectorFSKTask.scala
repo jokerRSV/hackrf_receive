@@ -1,7 +1,7 @@
 package tasks
 
 import javafx.concurrent.Task
-import utils.Utils.calcCoefAmplBand
+import utils.Utils.{calcCoefAmplBand, findMean}
 
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 
@@ -12,6 +12,7 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
   val lengthFunc: (Array[(Double, Double)], Int) => Array[(Double, Double)] =
     (ar, i) => ar.takeWhile(_._1 <= startFrequncyHz + i)
   val step = 1000 // in Hz
+  val levelOne = -70
 
   val atomicFreqDomain = new AtomicReference[Array[(Double, Double)]](Array.empty)
   val isCancelled = new AtomicBoolean(false)
@@ -40,9 +41,7 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
           .toList
           .filter(_.length == fskLengthFull)
           .foreach { l =>
-            val calcCenterRaw = calcCoefAmplBand(l.map(_._2))
-            val calcCenter = BigDecimal(calcCenterRaw).setScale(1, BigDecimal.RoundingMode.HALF_DOWN).toDouble
-            val center = if (calcCenter == 0) 0.01 else calcCenter
+            val center = levelOne
             val headFreq = l.head._1
             val base = next.curried(l).apply(headFreq)
             val b0 = base(0)
@@ -61,7 +60,7 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
                 b6 < center &&
                 b10 < center
             if (res) {
-              println(s"start freq: ${l.head} center lvl: ${calcCenter}_____b0: ${b0}__b4: ${b4}__b4: ${b4}__b12: ${b12}______b2: ${b2}__b6: ${b6}__b10: ${b10}")
+              println(s"start freq: ${l.head._1} center lvl: ${center}_____b0: ${b0}__b4: ${b4}__b4: ${b4}__b12: ${b12}______b2: ${b2}__b6: ${b6}__b10: ${b10}")
             }
           }
       }
