@@ -18,3 +18,5 @@ libraryDependencies += "org.scalafx" %% "scalafx" % "20.0.0-R31"
 libraryDependencies += "javax.xml.bind" % "jaxb-api" % "2.4.0-b180830.0359"
 
 libraryDependencies += "net.java.dev.jna" % "jna" % "5.14.0"
+
+libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4"

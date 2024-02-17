@@ -1,9 +1,7 @@
 package tasks
 
-import javafx.concurrent.Task
-import utils.Utils.{calcCoefAmplBand, findMean}
-
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
+import scala.collection.parallel.CollectionConverters._
 
 class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
   println("init detector")
@@ -40,6 +38,7 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
           .sliding(fskLengthFull, fskLength1kHz.length - 1)
           .toList
           .filter(_.length == fskLengthFull)
+          .par
           .foreach { l =>
             val center = levelOne
             val headFreq = l.head._1
