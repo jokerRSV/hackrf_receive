@@ -271,10 +271,12 @@ object Main extends JFXApp3 {
     sampleRateField.prefHeight = 30
     sampleRateField.setText(this.SAMPLE_RATE.toString)
     sampleRateField.onKeyPressed = (action: KeyEvent) => {
-      if (action.getCode == javafx.scene.input.KeyCode.ENTER && action.getText.toInt <= 20000000 && action.getText.toInt >= 2000000) {
-        this.SAMPLE_RATE = sampleRateField.getText.toInt
-        this.freqOffset = 0
-        createMainFskTask(pixelWriter, startLabel, endLabel, fftBinWidthLabel)
+      if (action.getCode == javafx.scene.input.KeyCode.ENTER) { // && action.getText.toInt <= 20000000 && action.getText.toInt >= 2000000) {
+        if (sampleRateField.getText.toInt >= 2000000 && sampleRateField.getText.toInt <= 20000000) {
+          this.SAMPLE_RATE = sampleRateField.getText.toInt
+          this.freqOffset = 0
+          createMainFskTask(pixelWriter, startLabel, endLabel, fftBinWidthLabel)
+        }
       }
     }
     val sliderHBox = new HBox()
