@@ -3,6 +3,7 @@ package tasks
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 import scala.annotation.tailrec
 import scala.collection.parallel.CollectionConverters._
+import scala.concurrent.duration.{Duration, NANOSECONDS}
 
 class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
   println("init detector")
@@ -32,6 +33,7 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
 
     @tailrec
     def loop(): Unit = {
+      val startTime = System.nanoTime()
       val frequencyDomain = atomicFreqDomain.get()
       val fskLengthFull = lengthFunc(frequencyDomain, 12000).length
       val fskLength1kHz = lengthFunc(frequencyDomain, step)
@@ -59,6 +61,8 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
             }
           }
       }
+      val endTime  = System.nanoTime()
+      println(s"diff time: ${Duration(endTime - startTime, NANOSECONDS).toMillis}")
       loop()
     }
 
