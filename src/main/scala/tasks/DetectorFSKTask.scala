@@ -1,12 +1,14 @@
 package tasks
 
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
+import scala.annotation.tailrec
 import scala.collection.parallel.CollectionConverters._
 
 class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
   println("init detector")
-  val next: (Seq[(Double, Double)], Double, Int) => Double =
-    (xs, base, i) => xs.dropWhile(_._1 < base + i).head._2
+  val next: (Seq[(Double, Double)], Double, Int, Int) => Seq[(Double, Double)] =
+    (xs, base, st, end) => xs.dropWhile(_._1 < base + st).takeWhile(_._1 <= base + end)
+
   val lengthFunc: (Array[(Double, Double)], Int) => Array[(Double, Double)] =
     (ar, i) => ar.takeWhile(_._1 <= startFrequncyHz + i)
   val step = 1000 // in Hz
@@ -28,6 +30,7 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
   override def run(): Unit = {
     println("start detector task")
 
+    @tailrec
     def loop(): Unit = {
       val frequencyDomain = atomicFreqDomain.get()
       val fskLengthFull = lengthFunc(frequencyDomain, 12000).length
@@ -42,22 +45,15 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
           .foreach { l =>
             val center = levelOne
             val headFreq = l.head._1
-            val base = next.curried(l).apply(headFreq)
-            val b0 = base(0)
-            val b4 = base(4000)
-            val b8 = base(8000)
-            val b12 = l.last._2
-            val b2 = base(2000)
-            val b6 = base(6000)
-            val b10 = base(10000)
-            val res =
-              b0 >= center &&
-                b4 >= center &&
-                b8 >= center &&
-                b12 >= center &&
-                b2 < center &&
-                b6 < center &&
-                b10 < center
+            val slice = next.curried(l).apply(headFreq)
+            lazy val b0 = slice(0)(20).forall(_._2 >= center)
+            lazy val b4 = slice(3980)(4020).forall(_._2 >= center)
+            lazy val b8 = slice(7980)(8020).forall(_._2 >= center)
+            lazy val b12 =slice(11980)(12000).forall(_._2 >= center)
+            lazy val b2 = slice(1000)(3000).forall(_._2 < center)
+            lazy val b6 = slice(5000)(7000).forall(_._2 < center)
+            lazy val b10 = slice(9000)(11000).forall(_._2 < center)
+            val res = b0 && b4 && b8 && b12 && b2 && b6 && b10
             if (res) {
               println(s"start freq: ${l.head._1} center lvl: ${center}_____b0: ${b0}__b4: ${b4}__b4: ${b4}__b12: ${b12}______b2: ${b2}__b6: ${b6}__b10: ${b10}")
             }

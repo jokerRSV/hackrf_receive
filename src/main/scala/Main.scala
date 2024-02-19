@@ -72,6 +72,9 @@ object Main extends JFXApp3 {
     }
     detectorFSKTask = Some(new DetectorFSKTask(START_FREQUNCEY))
     task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, counterLimit, isOn, this.freqFactor, detectorFSKTask))
+    //draw main y-axis
+    pixelWriter.setPixels(xOffset - 10, 10, 2, scaleYOffset, format, yScaleB, 0, 0)
+
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>
         val (fullList, sweepDone, fftBinWidth) = (list._1, list._2, list._3)
@@ -138,7 +141,7 @@ object Main extends JFXApp3 {
   val fillWhite = Array.fill(APP_SIZE_X * heightImageView)(255.toByte, 255.toByte, 255.toByte).flatMap(t => Array(t._1, t._2, t._3))
 
   private def clearImage(pixelWriter: PixelWriter) = {
-    pixelWriter.setPixels(20, 20, widthImageView, scaleYOffset, format, fillWhite, 0, 0)
+    pixelWriter.setPixels(15, 20, widthImageView - 25, scaleYOffset, format, fillWhite, 0, 0)
   }
 
   private def createImage(writableImage: WritableImage): ImageView = {
