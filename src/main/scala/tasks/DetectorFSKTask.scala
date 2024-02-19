@@ -33,15 +33,16 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
   }
 
   def cancel(): Unit = {
-    println("stopping detector task")
+    println("stopping detector thread")
     isCancelled.set(true)
   }
 
   override def run(): Unit = {
-    println("start detector task")
+    println("start detector thread")
 
     @tailrec
     def loop(): Unit = {
+      //      println(s"working ${Thread.currentThread().threadId()}")
       //      val startTime = System.nanoTime()
       val frequencyDomain = atomicFreqDomain.get()
       val fskLengthFull = lengthFunc(frequencyDomain, 12000).length
@@ -73,18 +74,13 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
       }
       //      val endTime = System.nanoTime()
       //      println(s"diff time: ${Duration(endTime - startTime, NANOSECONDS).toMillis}")
-      loop()
+      if (!isCancelled.get()) {
+        loop()
+      }
     }
 
-    if (!isCancelled.get()) {
-      try {
-        loop()
-      } catch {
-        case e: Exception => e.printStackTrace()
-      }
-    } else {
-      println("completing detector task")
-    }
+    loop()
+    println("completing detector thread")
   }
 
   def sliceFind(taskList: List[PairsBool], arr: Array[(Double, Double)]): Boolean = {

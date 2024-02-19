@@ -55,15 +55,13 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
     }
 
     if (isCancelled) {
-      println("stoping the task")
+      println("stoping main fsk task")
       HackRFSweepNativeBridge.stop()
     }
   }
 
   override def call(): (Array[(Double, Double)], Double) = {
     HackRFSweepNativeBridge.start(this, startFrequncyHz, sampleRate, fftSize, lna, vga, bw)
-    println("task completed!!")
-    HackRFSweepNativeBridge.stop()
     (Array.empty, 0d)
   }
 }

@@ -64,7 +64,7 @@ object Main extends JFXApp3 {
     detectorFSKTask.foreach(_.cancel())
     task.foreach { value =>
       value.cancel
-      println(s"task is running: ${value.isRunning}")
+      println(s"main task is running: ${value.isRunning}")
       while (value.isRunning) {
         TimeUnit.MILLISECONDS.sleep(10)
       }
@@ -124,7 +124,7 @@ object Main extends JFXApp3 {
           }
       }
       val thread = new Thread(t)
-      thread.setName(s"$MainFskTask")
+      thread.setName("MainFskTask")
       thread.setDaemon(true)
       thread.start()
     }
@@ -148,6 +148,10 @@ object Main extends JFXApp3 {
     imageView.margin = Insets(0, 0, 0, 0)
     imageView
   }
+
+//  def createCommand(): Unit = {
+//    createMainFskTask(pixelWriter, startLabel, endLabel, fftBinWidthLabel)
+//  }
 
   override def start(): Unit = {
     val writableImage = new WritableImage(APP_SIZE_X, heightImageView)
