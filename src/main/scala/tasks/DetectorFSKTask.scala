@@ -33,7 +33,7 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
 
     @tailrec
     def loop(): Unit = {
-      val startTime = System.nanoTime()
+      //      val startTime = System.nanoTime()
       val frequencyDomain = atomicFreqDomain.get()
       val fskLengthFull = lengthFunc(frequencyDomain, 12000).length
       val fskLength1kHz = lengthFunc(frequencyDomain, step)
@@ -51,7 +51,7 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
             lazy val b0 = slice(0)(20).forall(_._2 >= center)
             lazy val b4 = slice(3980)(4020).forall(_._2 >= center)
             lazy val b8 = slice(7980)(8020).forall(_._2 >= center)
-            lazy val b12 =slice(11980)(12000).forall(_._2 >= center)
+            lazy val b12 = slice(11980)(12000).forall(_._2 >= center)
             lazy val b2 = slice(1000)(3000).forall(_._2 < center)
             lazy val b6 = slice(5000)(7000).forall(_._2 < center)
             lazy val b10 = slice(9000)(11000).forall(_._2 < center)
@@ -61,8 +61,8 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
             }
           }
       }
-      val endTime  = System.nanoTime()
-      println(s"diff time: ${Duration(endTime - startTime, NANOSECONDS).toMillis}")
+      //      val endTime  = System.nanoTime()
+      //      println(s"diff time: ${Duration(endTime - startTime, NANOSECONDS).toMillis}")
       loop()
     }
 
