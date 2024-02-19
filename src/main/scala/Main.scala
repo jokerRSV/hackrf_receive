@@ -77,12 +77,10 @@ object Main extends JFXApp3 {
 
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>
-        val (fullList, sweepDone, fftBinWidth) = (list._1, list._2, list._3)
+        val (fullList, fftBinWidth) = (list._1, list._2)
         fftBinWidthLabel.text = fftBinWidth.toString
         val cutList = fullList.drop(freqOffset / fftBinWidth.toInt)
-        if (sweepDone) {
-          clearImage(pixelWriter)
-        }
+        clearImage(pixelWriter)
         val scaleX =
           cutList
             .take(roundedX + 1)

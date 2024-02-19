@@ -3,7 +3,6 @@ package hackrf;
 import com.sun.jna.Callback;
 import com.sun.jna.Library;
 import com.sun.jna.ptr.DoubleByReference;
-import com.sun.jna.ptr.FloatByReference;
 
 /**
  * JNA Wrapper for library <b>hackrf-sweep</b><br>
@@ -13,7 +12,7 @@ import com.sun.jna.ptr.FloatByReference;
  */
 public class HackrfSweepLibrary implements Library {
     public interface hackrf_sweep_lib_start__fft_power_callback_callback extends Callback {
-        void apply(double fft_bin_width_callback, DoubleByReference freqStart, DoubleByReference powerdBm, boolean sweepDone);
+        void apply(double fft_bin_width_callback, DoubleByReference freqStart, DoubleByReference powerdBm);
     }
 
     public static native int hackrf_lib_start(hackrf_sweep_lib_start__fft_power_callback_callback _fft_power_callback,

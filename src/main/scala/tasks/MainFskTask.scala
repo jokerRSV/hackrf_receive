@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReferenc
 import scala.collection.mutable.ArrayBuffer
 
 class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int, bw: Int, amountCount: Int,
-                  isOn: Boolean, factor: Double, detectorFSKTask: Option[DetectorFSKTask]) extends Task[(Array[(Double, Double)], Boolean, Double)] with HackRFSweepDataCallback {
+                  isOn: Boolean, factor: Double, detectorFSKTask: Option[DetectorFSKTask]) extends Task[(Array[(Double, Double)], Double)] with HackRFSweepDataCallback {
   val isOnAtomic = new AtomicBoolean(isOn)
   val counterLimitAtomic = new AtomicInteger(amountCount)
   val filterFactorAtomic = new AtomicReference(0.03)
@@ -33,7 +33,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   updateFilterFactor(factor)
   var buff = ArrayBuffer.fill(fftSize)(default)
 
-  override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double], sweepDone: Boolean, fftBinWidth: Double): Unit = {
+  override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double], fftBinWidth: Double): Unit = {
 //    println(s"${frequencyDomain.head}___${signalPowerdBm.head}")
     buff = buff.zip(signalPowerdBm).map { tuple =>
       //remove minus value
@@ -49,7 +49,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
       count = 0
       if (isOnAtomic.get()) {
         updateValue {
-          (zipped, sweepDone, fftBinWidth)
+          (zipped, fftBinWidth)
         }
       }
     }
@@ -60,11 +60,11 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
     }
   }
 
-  override def call(): (Array[(Double, Double)], Boolean, Double) = {
+  override def call(): (Array[(Double, Double)], Double) = {
     HackRFSweepNativeBridge.start(this, startFrequncyHz, sampleRate, fftSize, lna, vga, bw)
     println("task completed!!")
     HackRFSweepNativeBridge.stop()
-    (Array.empty, false, 0d)
+    (Array.empty, 0d)
   }
 }
 
