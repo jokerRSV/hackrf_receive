@@ -55,7 +55,7 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
             lazy val b10 = slice(9000)(11000).forall(_._2 < center)
             val res = b0 && b4 && b8 && b12 && b2 && b6 && b10
             if (res) {
-              println(s"start freq: ${l.head._1} center lvl: ${center}_____b0: ${b0}__b4: ${b4}__b4: ${b4}__b12: ${b12}______b2: ${b2}__b6: ${b6}__b10: ${b10}")
+              println(s"start freq: ${l.head._1} center lvl: ${center}_____b0: ${b0}__b4: ${b4}__b8: ${b8}__b12: ${b12}______b2: ${b2}__b6: ${b6}__b10: ${b10}")
             }
           }
       }
