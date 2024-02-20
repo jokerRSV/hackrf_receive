@@ -9,6 +9,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int, bw: Int, amountCount: Int,
                   isOn: Boolean, factor: Double, detectorFSKTask: Option[DetectorFSKTask], ampEnable: Boolean) extends Task[(Array[(Double, Double)], Double)] with HackRFSweepDataCallback {
+  println("init MainFskTask")
   val isOnAtomic = new AtomicBoolean(isOn)
   val counterLimitAtomic = new AtomicInteger(amountCount)
   val filterFactorAtomic = new AtomicReference(0.03)
