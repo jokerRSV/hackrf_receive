@@ -16,13 +16,14 @@ import utils.JavaFXExecutionContext
 import java.util.concurrent.TimeUnit
 
 object Main extends JFXApp3 {
-  var START_FREQUNCEY = 105900000 // in Hz
+  var START_FREQUNCEY = 105300000 // in Hz
   var SAMPLE_RATE = 2621440 // sample rate in Hz
+//  var SAMPLE_RATE = 3276800 // sample rate in Hz
   //  var FFT_BIN_WIDTH = 20 // in Hz [20, 25, 40, 50, 100, 125, 150]
   val baseBinary = 1024
   var FFT_SIZE = 128 * baseBinary // in Hz
-  val LNA = 32 // 0 to 40 with 8 step
-  val VGA = 10 // 0 to 62 with 2 step
+  val LNA = 16 // 0 to 40 with 8 step
+  val VGA = 0 // 0 to 62 with 2 step
   var counterLimit = 5
   var freqFactor = 0.03
 
