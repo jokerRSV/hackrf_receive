@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReferenc
 import scala.collection.mutable.ArrayBuffer
 
 class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int, bw: Int, amountCount: Int,
-                  isOn: Boolean, factor: Double, detectorFSKTask: Option[DetectorFSKTask]) extends Task[(Array[(Double, Double)], Double)] with HackRFSweepDataCallback {
+                  isOn: Boolean, factor: Double, detectorFSKTask: Option[DetectorFSKTask], ampEnable: Boolean) extends Task[(Array[(Double, Double)], Double)] with HackRFSweepDataCallback {
   val isOnAtomic = new AtomicBoolean(isOn)
   val counterLimitAtomic = new AtomicInteger(amountCount)
   val filterFactorAtomic = new AtomicReference(0.03)
@@ -61,7 +61,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   }
 
   override def call(): (Array[(Double, Double)], Double) = {
-    HackRFSweepNativeBridge.start(this, startFrequncyHz, sampleRate, fftSize, lna, vga, bw)
+    HackRFSweepNativeBridge.start(this, startFrequncyHz, sampleRate, fftSize, lna, vga, bw, ampEnable)
     (Array.empty, 0d)
   }
 }

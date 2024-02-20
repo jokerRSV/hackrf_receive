@@ -38,6 +38,7 @@ object Main extends JFXApp3 {
   //  val bw = FFT_SIZE * FFT_BIN_WIDTH
   val bw = 0
   var isOn = true
+  var ampEnable = false
 
   val coef = APP_SIZE_Y - 20
   val xOffset = 20
@@ -71,7 +72,7 @@ object Main extends JFXApp3 {
       TimeUnit.MILLISECONDS.sleep(100)
     }
     detectorFSKTask = Some(new DetectorFSKTask(START_FREQUNCEY))
-    task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, counterLimit, isOn, this.freqFactor, detectorFSKTask))
+    task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, counterLimit, isOn, this.freqFactor, detectorFSKTask, this.ampEnable))
     //draw main y-axis
     pixelWriter.setPixels(xOffset - 10, 10, 2, scaleYOffset, format, yScaleB, 0, 0)
 
@@ -237,6 +238,13 @@ object Main extends JFXApp3 {
       this.isOn = nv
       this.task.foreach(_.updateOnOff(this.isOn))
     }
+
+    val ampEnableCheckBox = new CheckBox()
+    ampEnableCheckBox.selected = this.ampEnable
+    ampEnableCheckBox.selectedProperty().addListener { (_, _, nv) =>
+      this.ampEnable = nv
+      createMainFskTask(pixelWriter, startLabel, endLabel, fftBinWidthLabel)
+    }
     val slider = new Slider(0.000, 0.09, freqFactor)
     slider.margin = Insets(0, 0, 0, 2)
     slider.padding = Insets(10, 0, 0, 15)
@@ -285,7 +293,7 @@ object Main extends JFXApp3 {
     }
     val sliderHBox = new HBox()
     sliderHBox.children = List(slider, fraction)
-    hBoxSecondPanel.children = List(startFreqField, sampleRateField, fftSizeChoiceBox, counterLimitChoiceBox, onOffDisplay, fftBinWidthLabel)
+    hBoxSecondPanel.children = List(startFreqField, sampleRateField, fftSizeChoiceBox, counterLimitChoiceBox, onOffDisplay, fftBinWidthLabel, ampEnableCheckBox)
     vBoxForControlPanel.children = List(hBoxForLabels, hBoxSecondPanel, sliderHBox)
     val stackPane = new StackPane()
     //    stackPane.prefWidth = widthImageView
