@@ -62,6 +62,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   }
 
   override def call(): (Array[(Double, Double)], Double) = {
+    println("start thread MainFskTask")
     HackRFSweepNativeBridge.start(this, startFrequncyHz, sampleRate, fftSize, lna, vga, bw, ampEnable)
     (Array.empty, 0d)
   }
