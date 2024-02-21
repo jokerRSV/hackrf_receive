@@ -43,7 +43,7 @@ object Main extends JFXApp3 {
   val coef = APP_SIZE_Y - 20
   val xOffset = 20
   val min = 0
-  val max = 150
+  val max = 130
   val diff = max - min
 
   val yScaleB = Array.fill(xOffset * scaleYOffset)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
