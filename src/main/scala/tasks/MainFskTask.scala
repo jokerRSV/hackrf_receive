@@ -43,7 +43,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
       v
     }
     val zipped = frequencyDomain.zip(buff)
-    detectorFSKTask.foreach(_.updateFreqDomain(zipped))
+    detectorFSKTask.foreach(_.updateFreqDomain((zipped, fftBinWidth.toInt)))
 
     count += 1
     if (count % counterLimitAtomic.get() == 0) {
