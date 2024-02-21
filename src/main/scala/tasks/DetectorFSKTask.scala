@@ -5,8 +5,9 @@ import scala.annotation.tailrec
 import scala.collection.parallel.CollectionConverters._
 import scala.concurrent.duration.{Duration, NANOSECONDS}
 
-class DetectorFSKTask(startFrequncyHz: Int, levelOne: Int) extends Runnable {
-  println("init detector")
+class DetectorFSKTask(startFrequncyHz: Int, levelOne: Int, noLogs: Boolean) extends Runnable {
+  if (!noLogs)
+    println("init detector")
   val next: (Seq[(Double, Double)], Double, Int, Int) => Seq[(Double, Double)] =
     (xs, base, st, end) => xs.dropWhile(_._1 < base + st).takeWhile(_._1 <= base + end)
 
@@ -33,12 +34,14 @@ class DetectorFSKTask(startFrequncyHz: Int, levelOne: Int) extends Runnable {
   }
 
   def cancel(): Unit = {
-    println("stopping detector thread")
+    if (!noLogs)
+      println("stopping detector thread")
     isCancelled.set(true)
   }
 
   override def run(): Unit = {
-    println(s"start detector thread ${Thread.currentThread().threadId()}")
+    if (!noLogs)
+      println(s"start detector thread ${Thread.currentThread().threadId()}")
 
     @tailrec
     def loop(): Unit = {
@@ -80,7 +83,8 @@ class DetectorFSKTask(startFrequncyHz: Int, levelOne: Int) extends Runnable {
     }
 
     loop()
-    println(s"completing detector thread ${Thread.currentThread().threadId()}")
+    if (!noLogs)
+      println(s"completing detector thread ${Thread.currentThread().threadId()}")
   }
 
   def sliceFind(taskList: List[PairsBool], arr: Array[(Double, Double)]): Boolean = {

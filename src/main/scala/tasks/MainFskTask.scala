@@ -8,8 +8,10 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReferenc
 import scala.collection.mutable.ArrayBuffer
 
 class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int, bw: Int, amountCount: Int,
-                  isOn: Boolean, factor: Double, detectorFSKTask: Option[DetectorFSKTask], ampEnable: Boolean) extends Task[(Array[(Double, Double)], Double)] with HackRFSweepDataCallback {
-  println("init MainFskTask")
+                  isOn: Boolean, factor: Double, detectorFSKTask: Option[DetectorFSKTask], ampEnable: Boolean, noLogs: Boolean)
+  extends Task[(Array[(Double, Double)], Double)] with HackRFSweepDataCallback {
+  if (!noLogs)
+    println("init MainFskTask")
   val isOnAtomic = new AtomicBoolean(isOn)
   val counterLimitAtomic = new AtomicInteger(amountCount)
   val filterFactorAtomic = new AtomicReference(factor)
@@ -32,14 +34,14 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   var count = 0
   val filter = new Batterworth2pLPF()
   updateFilterFactor(factor)
-//  var buff = ArrayBuffer.fill(fftSize)(default)
+  //  var buff = ArrayBuffer.fill(fftSize)(default)
 
   override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double], fftBinWidth: Double): Unit = {
-//    println(s"${frequencyDomain.head}___${frequencyDomain.last}")
+    //    println(s"${frequencyDomain.head}___${frequencyDomain.last}")
     filter.reset(default)
-    val buff  = signalPowerdBm.map { tuple =>
+    val buff = signalPowerdBm.map { tuple =>
       //remove minus value
-//      val mean = (tuple._1 + tuple._2) / 2
+      //      val mean = (tuple._1 + tuple._2) / 2
       val v = filter.apply(tuple)
       v
     }
@@ -57,14 +59,16 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
     }
 
     if (isCancelled) {
-      println("stoping main fsk task")
+      if (!noLogs)
+        println("stoping main fsk task")
       HackRFSweepNativeBridge.stop()
     }
   }
 
   override def call(): (Array[(Double, Double)], Double) = {
-    println("start thread MainFskTask")
-    HackRFSweepNativeBridge.start(this, startFrequncyHz, sampleRate, fftSize, lna, vga, bw, ampEnable)
+    if (!noLogs)
+      println("start thread MainFskTask")
+    HackRFSweepNativeBridge.start(this, startFrequncyHz, sampleRate, fftSize, lna, vga, bw, ampEnable, noLogs)
     (Array.empty, 0d)
   }
 }
