@@ -38,7 +38,7 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
   }
 
   override def run(): Unit = {
-    println("start detector thread")
+    println(s"start detector thread ${Thread.currentThread().threadId()}")
 
     @tailrec
     def loop(): Unit = {
@@ -66,15 +66,7 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
             lazy val b6 = slice(5000)(7000).max
             lazy val b10 = slice(9000)(11000).max
             //val res = b0 && b4 && b8 && b12 && b2 && b6 && b10
-            val res = {
-              try {
-                sliceFind(taskList, l)
-              } catch {
-                case e: Throwable =>
-                  e.printStackTrace()
-                  false
-              }
-            }
+            val res = sliceFind(taskList, l)
             if (res) {
               println(s"start freq: ${l.head._1} center lvl: ${center}_____b0: ${b0}__b4: ${b4}__b8: ${b8}__b12: ${b12}______b2: ${b2}__b6: ${b6}__b10: ${b10}")
             }
@@ -88,7 +80,7 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
     }
 
     loop()
-    println("completing detector thread")
+    println(s"completing detector thread ${Thread.currentThread().threadId()}")
   }
 
   def sliceFind(taskList: List[PairsBool], arr: Array[(Double, Double)]): Boolean = {
