@@ -38,6 +38,7 @@ object Main extends JFXApp3 {
   var limitFreq = 0
   var isOn = true
   var ampEnable = false
+  var levelOne = -90
 
   val coef = APP_SIZE_Y - 20
   val xOffset = 20
@@ -71,7 +72,7 @@ object Main extends JFXApp3 {
       }
       TimeUnit.MILLISECONDS.sleep(100)
     }
-    detectorFSKTask = Some(new DetectorFSKTask(START_FREQUNCEY))
+    detectorFSKTask = Some(new DetectorFSKTask(START_FREQUNCEY, levelOne))
     task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, counterLimit, isOn, this.freqFactor, detectorFSKTask, this.ampEnable))
     //draw main y-axis
     pixelWriter.setPixels(xOffset - 10, 10, 2, scaleYOffset, format, yScaleB, 0, 0)
