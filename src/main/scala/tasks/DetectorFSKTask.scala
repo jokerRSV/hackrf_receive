@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 import scala.collection.parallel.CollectionConverters._
 import scala.concurrent.duration.{Duration, NANOSECONDS}
 
-class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
+class DetectorFSKTask(startFrequncyHz: Int, levelOne: Int) extends Runnable {
   println("init detector")
   val next: (Seq[(Double, Double)], Double, Int, Int) => Seq[(Double, Double)] =
     (xs, base, st, end) => xs.dropWhile(_._1 < base + st).takeWhile(_._1 <= base + end)
@@ -13,7 +13,6 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
   val lengthFunc: (Array[(Double, Double)], Int) => Array[(Double, Double)] =
     (ar, i) => ar.takeWhile(_._1 <= startFrequncyHz + i)
   val step = 1000 // in Hz
-  val levelOne = -90
 
   val atomicFreqDomain = new AtomicReference[(Array[(Double, Double)], Int)]((Array.fill(100)(0, 0), 0))
   val isCancelled = new AtomicBoolean(false)
