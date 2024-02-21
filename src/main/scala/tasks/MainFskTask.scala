@@ -35,7 +35,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   var buff = ArrayBuffer.fill(fftSize)(default)
 
   override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double], fftBinWidth: Double): Unit = {
-    println(s"${frequencyDomain.head}___${frequencyDomain.last}")
+//    println(s"${frequencyDomain.head}___${frequencyDomain.last}")
     buff = buff.zip(signalPowerdBm).map { tuple =>
       //remove minus value
       val mean = (tuple._1 + tuple._2) / 2
