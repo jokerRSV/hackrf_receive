@@ -36,7 +36,6 @@ object Main extends JFXApp3 {
   var detectorFSKTask: Option[DetectorFSKTask] = None
   var freqOffset = 0
   var limitFreq = 0
-  //  val bw = 0
   var isOn = true
   var ampEnable = false
 
