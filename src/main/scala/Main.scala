@@ -58,7 +58,8 @@ object Main extends JFXApp3 {
   def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label, fftBinWidthLabel: Label): Unit = {
     //    val SAMPLE_RATE = FFT_BIN_WIDTH * FFT_SIZE // sample rate in Hz
     val endFreq = SAMPLE_RATE + START_FREQUNCEY
-    val bw = 2500000
+    val bw = (endFreq - START_FREQUNCEY) / 2
+    //    val bw = 0
     //    val SAMPLE_RATE = 16384000 // sample rate in Hz
     println(s"freq start: ${START_FREQUNCEY} bw: ${endFreq - START_FREQUNCEY} end: ${endFreq}")
     println(s"sample rate: ${SAMPLE_RATE}")
