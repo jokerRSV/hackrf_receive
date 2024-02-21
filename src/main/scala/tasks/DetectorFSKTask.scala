@@ -13,7 +13,7 @@ class DetectorFSKTask(startFrequncyHz: Int) extends Runnable {
   val lengthFunc: (Array[(Double, Double)], Int) => Array[(Double, Double)] =
     (ar, i) => ar.takeWhile(_._1 <= startFrequncyHz + i)
   val step = 1000 // in Hz
-  val levelOne = -60
+  val levelOne = -85
 
   val atomicFreqDomain = new AtomicReference[Array[(Double, Double)]](Array.empty)
   val isCancelled = new AtomicBoolean(false)
