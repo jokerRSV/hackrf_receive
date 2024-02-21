@@ -23,7 +23,7 @@ object Main extends JFXApp3 {
   val baseBinary = 1024
   var FFT_SIZE = 128 / 2 * baseBinary // in Hz
   val LNA = 40 // 0 to 40 with 8 step
-  val VGA = 16 // 0 to 62 with 2 step
+  val VGA = 10 // 0 to 62 with 2 step
   var counterLimit = 1
   var freqFactor = 0.03
 
