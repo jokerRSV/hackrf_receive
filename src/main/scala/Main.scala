@@ -55,26 +55,29 @@ object Main extends JFXApp3 {
   val format = PixelFormat.getByteRgbInstance
   val roundedX = widthImageView / 100 * 100
 
-  def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label, fftBinWidthLabel: Label): Unit = {
+  def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label, fftBinWidthLabel: Label, noLogs: Boolean = false): Unit = {
     //    val SAMPLE_RATE = FFT_BIN_WIDTH * FFT_SIZE // sample rate in Hz
     val endFreq = SAMPLE_RATE + START_FREQUNCEY
     val bw = (endFreq - START_FREQUNCEY) / 2
     //    val bw = 0
     //    val SAMPLE_RATE = 16384000 // sample rate in Hz
-    println(s"freq start: ${START_FREQUNCEY} bw: ${endFreq - START_FREQUNCEY} end: ${endFreq}")
-    println(s"sample rate: ${SAMPLE_RATE}")
+    if (!noLogs) {
+      println(s"freq start: ${START_FREQUNCEY} bw: ${endFreq - START_FREQUNCEY} end: ${endFreq}")
+      println(s"sample rate: ${SAMPLE_RATE}")
+    }
 
     detectorFSKTask.foreach(_.cancel())
     task.foreach { value =>
       value.cancel
-      println(s"main task is running: ${value.isRunning}")
+      if (!noLogs)
+        println(s"main task is running: ${value.isRunning}")
       while (value.isRunning) {
         TimeUnit.MILLISECONDS.sleep(10)
       }
       TimeUnit.MILLISECONDS.sleep(100)
     }
-    detectorFSKTask = Some(new DetectorFSKTask(START_FREQUNCEY, levelOne))
-    task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, counterLimit, isOn, this.freqFactor, detectorFSKTask, this.ampEnable))
+    detectorFSKTask = Some(new DetectorFSKTask(START_FREQUNCEY, levelOne, noLogs))
+    task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, counterLimit, isOn, this.freqFactor, detectorFSKTask, this.ampEnable, noLogs))
     //draw main y-axis
     pixelWriter.setPixels(xOffset - 10, 10, 2, scaleYOffset, format, yScaleB, 0, 0)
 
@@ -120,7 +123,7 @@ object Main extends JFXApp3 {
               val currYY = (((-currentY - min) / diff) * coef).toInt
               val currXX = currentX + xOffset
               if (currXX >= 0 && currYY >= 0 && currXX < roundedX + xOffset && currYY < heightImageView - 1) {
-//                pixelWriter.setColor(currXX, currYY, Color.Black)
+                //                pixelWriter.setColor(currXX, currYY, Color.Black)
                 pixelWriter.setPixels(currXX, currYY, 1, scaleYOffset - 30 - currYY, format, fillY, 0, 0)
               }
             case _ => ()
