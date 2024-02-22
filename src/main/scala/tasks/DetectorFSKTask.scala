@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 import scala.collection.parallel.CollectionConverters._
 import scala.concurrent.duration.{Duration, NANOSECONDS}
 
-class DetectorFSKTask(startFrequncyHz: Int, levelOne: Int, noLogs: Boolean) extends Runnable {
+class DetectorFSKTask(startFrequncyHz: Int, levelOne: Double, noLogs: Boolean) extends Runnable {
   if (!noLogs)
     println("init detector")
   val next: (Seq[(Double, Double)], Double, Int, Int) => Seq[(Double, Double)] =
@@ -16,6 +16,7 @@ class DetectorFSKTask(startFrequncyHz: Int, levelOne: Int, noLogs: Boolean) exte
   val step = 1000 // in Hz
 
   val atomicFreqDomain = new AtomicReference[(Array[(Double, Double)], Int)]((Array.fill(100)(0, 0), 0))
+  val levelOneAtomic = new AtomicReference[Double](levelOne)
   val isCancelled = new AtomicBoolean(false)
   val coef = 6
   val taskList = (fftBinWidth: Int) => List(
@@ -29,8 +30,12 @@ class DetectorFSKTask(startFrequncyHz: Int, levelOne: Int, noLogs: Boolean) exte
   )
 
   def updateFreqDomain(zippedFreqDomain: (Array[(Double, Double)], Int)): Unit = {
-    val v = atomicFreqDomain.set(zippedFreqDomain)
-    v
+    atomicFreqDomain.set(zippedFreqDomain)
+  }
+
+  def updateLevel(levelOne: Double): Unit = {
+    levelOneAtomic.set(levelOne)
+    println(s"set new level: ${levelOne}")
   }
 
   def cancel(): Unit = {
@@ -48,6 +53,7 @@ class DetectorFSKTask(startFrequncyHz: Int, levelOne: Int, noLogs: Boolean) exte
       //      println(s"working ${Thread.currentThread().threadId()}")
       //      val startTime = System.nanoTime()
       val (frequencyDomain, fftBinWidth) = atomicFreqDomain.get()
+      val level = levelOneAtomic.get()
       val fskLengthFull = lengthFunc(frequencyDomain, 12000).length
       val fskLength1kHz = lengthFunc(frequencyDomain, step)
       if (fskLength1kHz.length > 1) {
@@ -56,9 +62,9 @@ class DetectorFSKTask(startFrequncyHz: Int, levelOne: Int, noLogs: Boolean) exte
           .sliding(fskLengthFull, fskLength1kHz.length - 1)
           .toList
           .filter(_.length == fskLengthFull)
-          .par
+//          .par
           .foreach { l =>
-            lazy val center = levelOne
+            lazy val center = levelOneAtomic.get()
             lazy val headFreq = l.head._1
             lazy val slice = next.curried(l).apply(headFreq)
             lazy val b0 = slice(0)(fftBinWidth).min
@@ -69,7 +75,7 @@ class DetectorFSKTask(startFrequncyHz: Int, levelOne: Int, noLogs: Boolean) exte
             lazy val b6 = slice(5500)(6500).max
             lazy val b10 = slice(9500)(10500).max
             //val res = b0 && b4 && b8 && b12 && b2 && b6 && b10
-            val res = sliceFind(taskList(fftBinWidth), l)
+            val res = sliceFind(taskList(fftBinWidth), l, level)
             if (res) {
               println(s"start freq: ${l.head._1} center lvl: ${center}_____b0: ${b0}__b4: ${b4}__b8: ${b8}__b12: ${b12}______b2: ${b2}__b6: ${b6}__b10: ${b10}")
             }
@@ -87,7 +93,7 @@ class DetectorFSKTask(startFrequncyHz: Int, levelOne: Int, noLogs: Boolean) exte
       println(s"completing detector thread ${Thread.currentThread().threadId()}")
   }
 
-  def sliceFind(taskList: List[PairsBool], arr: Array[(Double, Double)]): Boolean = {
+  def sliceFind(taskList: List[PairsBool], arr: Array[(Double, Double)], levelOne: Double): Boolean = {
     val headFreq = arr.head._1
 
     @tailrec

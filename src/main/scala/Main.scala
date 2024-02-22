@@ -22,7 +22,7 @@ object Main extends JFXApp3 {
   //  var FFT_BIN_WIDTH = 20 // in Hz [20, 25, 40, 50, 100, 125, 150]
   //  val baseBinary = 1024
   //  var fftBinWidth = 64 * baseBinary // in Hz
-  var fftBinWidth = 20 // in Hz
+  var fftBinWidth = 500 // in Hz
   val LNA = 40 // 0 to 40 with 8 step
   val VGA = 10 // 0 to 62 with 2 step
   var counterLimit = 1
@@ -40,12 +40,12 @@ object Main extends JFXApp3 {
   var limitFreq = 0
   var isOn = true
   var ampEnable = false
-  var levelOne = -90
+  var levelOne = 2.0
 
-  val coef = APP_SIZE_Y - 20
+  val coef = APP_SIZE_Y * 9 / 13
   val xOffset = 20
   val min = 0
-  val max = 150
+  val max = 2
   val diff = max - min
 
   val yScaleBl = Array.fill(xOffset * scaleYOffset)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
@@ -128,9 +128,9 @@ object Main extends JFXApp3 {
                   pixelWriter.setPixels(currentX + xOffset - 1, scaleYOffset + 5, 3, 5, format, y1000R, 0, 0)
                 }
               }
-
-              //val currYY = coef - (((currentY - min) / diff) * coef).toInt
-              val currYY = (((-currentY - min) / diff) * coef).toInt
+              val c = (currentY - min) * 100
+              val currYY = coef - (c / diff).toInt
+              //              val currYY = (((-currentY - min) / diff) * coef).toInt
               val currXX = currentX + xOffset
               if (currXX >= 0 && currYY >= 0 && currXX < roundedX + xOffset && currYY < heightImageView - 1) {
                 //                pixelWriter.setColor(currXX, currYY, Color.Black)
@@ -272,7 +272,7 @@ object Main extends JFXApp3 {
     slider.setBlockIncrement(0.001)
     val fraction = Label(slider.getValue.toString)
     fraction.margin = Insets(10, 0, 0, 20)
-    fraction.prefWidth = 130
+    fraction.prefWidth = 50
     slider.value.addListener { (_, _, newV) =>
       val v = BigDecimal(newV.doubleValue()).setScale(3, BigDecimal.RoundingMode.HALF_UP)
       fraction.setText(v.toString())
@@ -301,13 +301,28 @@ object Main extends JFXApp3 {
       if (action.getCode == javafx.scene.input.KeyCode.ENTER) { // && action.getText.toInt <= 20000000 && action.getText.toInt >= 2000000) {
         if (sampleRateField.getText.toInt >= 2000000 && sampleRateField.getText.toInt <= 20000000) {
           this.SAMPLE_RATE = sampleRateField.getText.toInt
-//          this.freqOffset = 0
+          //this.freqOffset = 0
           createMainFskTask(pixelWriter, startLabel, endLabel, fftBinWidthLabel)
         }
       }
     }
+
+    val levelField = new TextField()
+    levelField.alignment = TopCenter
+    levelField.prefWidth = 50
+    levelField.prefHeight = 30
+    levelField.setText(this.levelOne.toString)
+    levelField.margin = Insets(10, 0, 0, 0)
+    levelField.onKeyPressed = (action: KeyEvent) => {
+      if (action.getCode == javafx.scene.input.KeyCode.ENTER) {
+        this.levelOne = levelField.getText.toDouble
+        detectorFSKTask.foreach(_.updateLevel(levelOne))
+      }
+    }
+
     val sliderHBox = new HBox()
-    sliderHBox.children = List(slider, fraction)
+    sliderHBox.children = List(slider, fraction, levelField)
+    sliderHBox.alignment = TopCenter
     hBoxSecondPanel.children = List(startFreqField, sampleRateField, fftBinWidthChoiceBox, counterLimitChoiceBox, onOffDisplay, fftBinWidthLabel)
     vBoxForControlPanel.children = List(hBoxForLabels, hBoxSecondPanel, sliderHBox)
     val stackPane = new StackPane()
