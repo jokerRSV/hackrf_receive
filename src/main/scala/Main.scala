@@ -105,7 +105,7 @@ object Main extends JFXApp3 {
             case (currentX, currentY, currScale) =>
               if (currentX < roundedX - 1) {
                 //draw scale every 1M
-                val base = currScale.toInt - START_FREQUNCEY
+                val base = currScale.toInt
                 if (base % 1000000 == 0) {
                   pixelWriter.setPixels(currentX + xOffset, scaleYOffset - 18, 4, 30, format, y1000000B, 0, 0)
                   //draw scale every 100k
