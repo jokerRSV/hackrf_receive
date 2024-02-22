@@ -33,21 +33,21 @@ public class HackRFSweepNativeBridge {
 
     }
 
-    public static synchronized void start(HackRFSweepDataCallback dataCallback, int centerFreq, int sample_rate_hz, int fft_size,
+    public static synchronized void start(HackRFSweepDataCallback dataCallback, int centerFreq, int sample_rate_hz, int fftBinWidth,
                                           int lna_gain, int vga_gain, int bw, boolean ampEnable, boolean noLogs) {
         HackrfSweepLibrary.hackrf_sweep_lib_start__fft_power_callback_callback callback = new HackrfSweepLibrary.hackrf_sweep_lib_start__fft_power_callback_callback() {
             @Override
-            public void apply(double fft_bin_width_callback, DoubleByReference freqStart, DoubleByReference powerdBm) {
+            public void apply(int fft_size, DoubleByReference freqStart, DoubleByReference powerdBm) {
                 double[] freqStartArr = freqStart.getPointer().getDoubleArray(0, fft_size);
                 double[] powerArr = powerdBm.getPointer().getDoubleArray(0, fft_size);
 //                double[] freqStartArr = new double[100];
 //                float[] powerArr = new float[100];
-                dataCallback.newSpectrumData(freqStartArr, powerArr, fft_bin_width_callback);
+                dataCallback.newSpectrumData(freqStartArr, powerArr, fft_size);
             }
         };
         Native.setCallbackThreadInitializer(callback, new CallbackThreadInitializer(true));
 
-        HackrfSweepLibrary.hackrf_lib_start(callback, centerFreq, sample_rate_hz, fft_size, lna_gain, vga_gain, bw, ampEnable, noLogs);
+        HackrfSweepLibrary.hackrf_lib_start(callback, centerFreq, sample_rate_hz, fftBinWidth, lna_gain, vga_gain, bw, ampEnable, noLogs);
     }
 
     public static void stop() {

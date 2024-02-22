@@ -18,10 +18,11 @@ import java.util.concurrent.TimeUnit
 object Main extends JFXApp3 {
   var START_FREQUNCEY = 105300000 // in Hz
   //  var SAMPLE_RATE = 2621440 // sample rate in Hz
-  var SAMPLE_RATE = 20000000 // sample rate in Hz
+  var SAMPLE_RATE = 10000000 // sample rate in Hz
   //  var FFT_BIN_WIDTH = 20 // in Hz [20, 25, 40, 50, 100, 125, 150]
-  val baseBinary = 1024
-  var FFT_SIZE = 128 / 2 * baseBinary // in Hz
+//  val baseBinary = 1024
+//  var fftBinWidth = 64 * baseBinary // in Hz
+  var fftBinWidth = 20 // in Hz
   val LNA = 40 // 0 to 40 with 8 step
   val VGA = 10 // 0 to 62 with 2 step
   var counterLimit = 1
@@ -55,10 +56,10 @@ object Main extends JFXApp3 {
   val format = PixelFormat.getByteRgbInstance
   val roundedX = widthImageView / 100 * 100
 
-  def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label, fftBinWidthLabel: Label, noLogs: Boolean = false): Unit = {
+  def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label, fftSizeLabel: Label, noLogs: Boolean = false): Unit = {
     //    val SAMPLE_RATE = FFT_BIN_WIDTH * FFT_SIZE // sample rate in Hz
     val endFreq = SAMPLE_RATE + START_FREQUNCEY
-    val bw = (endFreq - START_FREQUNCEY) / 2
+    val bw = (endFreq - START_FREQUNCEY) / 4
     //    val bw = 0
     //    val SAMPLE_RATE = 16384000 // sample rate in Hz
     if (!noLogs) {
@@ -77,14 +78,14 @@ object Main extends JFXApp3 {
       TimeUnit.MILLISECONDS.sleep(100)
     }
     detectorFSKTask = Some(new DetectorFSKTask(START_FREQUNCEY, levelOne, noLogs))
-    task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, FFT_SIZE, LNA, VGA, bw, counterLimit, isOn, this.freqFactor, detectorFSKTask, this.ampEnable, noLogs))
+    task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, fftBinWidth, LNA, VGA, bw, counterLimit, isOn, this.freqFactor, detectorFSKTask, this.ampEnable, noLogs))
     //draw main y-axis
     pixelWriter.setPixels(xOffset - 10, 10, 2, scaleYOffset, format, yScaleB, 0, 0)
 
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>
-        val (fullList, fftBinWidth) = (list._1, list._2)
-        fftBinWidthLabel.text = fftBinWidth.toString
+        val (fullList, fftSize) = (list._1, list._2)
+        fftSizeLabel.text = fftSize.toString
         val cutList = fullList.drop(freqOffset / fftBinWidth.toInt)
         clearImage(pixelWriter)
         val scaleX =
@@ -218,12 +219,12 @@ object Main extends JFXApp3 {
         this.freqOffset = temp
       }
     }
-    val fftSizeChoiceBox = new ChoiceBox[Int]()
-    val list = ObservableBuffer.from(List(1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1).map(_ * baseBinary))
-    fftSizeChoiceBox.setItems(list)
-    fftSizeChoiceBox.setValue(FFT_SIZE)
-    fftSizeChoiceBox.getSelectionModel.selectedItemProperty().addListener { (_, _, newFftSize) =>
-      this.FFT_SIZE = newFftSize
+    val fftBinWidthChoiceBox = new ChoiceBox[Int]()
+    val list = ObservableBuffer.from(List(10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 200, 250, 500, 1000))
+    fftBinWidthChoiceBox.setItems(list)
+    fftBinWidthChoiceBox.setValue(fftBinWidth)
+    fftBinWidthChoiceBox.getSelectionModel.selectedItemProperty().addListener { (_, _, newFftSize) =>
+      this.fftBinWidth = newFftSize
       createMainFskTask(pixelWriter, startLabel, endLabel, fftBinWidthLabel)
     }
     hBoxForLabels.children = List(lFastBtn, lSlowBtn, lLowBtn, rLowBtn, rSlowBtn, rFastBtn)
@@ -298,7 +299,7 @@ object Main extends JFXApp3 {
     }
     val sliderHBox = new HBox()
     sliderHBox.children = List(slider, fraction)
-    hBoxSecondPanel.children = List(startFreqField, sampleRateField, fftSizeChoiceBox, counterLimitChoiceBox, onOffDisplay, fftBinWidthLabel)
+    hBoxSecondPanel.children = List(startFreqField, sampleRateField, fftBinWidthChoiceBox, counterLimitChoiceBox, onOffDisplay, fftBinWidthLabel)
     vBoxForControlPanel.children = List(hBoxForLabels, hBoxSecondPanel, sliderHBox)
     val stackPane = new StackPane()
     //    stackPane.prefWidth = widthImageView

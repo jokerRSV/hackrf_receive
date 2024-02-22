@@ -7,7 +7,7 @@ import mavlib.Batterworth2pLPF
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReference}
 import scala.collection.mutable.ArrayBuffer
 
-class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int, vga: Int, bw: Int, amountCount: Int,
+class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftBinWidth: Int, lna: Int, vga: Int, bw: Int, amountCount: Int,
                   isOn: Boolean, factor: Double, detectorFSKTask: Option[DetectorFSKTask], ampEnable: Boolean, noLogs: Boolean)
   extends Task[(Array[(Double, Double)], Double)] with HackRFSweepDataCallback {
   if (!noLogs)
@@ -36,7 +36,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   updateFilterFactor(factor)
   //  var buff = ArrayBuffer.fill(fftSize)(default)
 
-  override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double], fftBinWidth: Double): Unit = {
+  override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double], fftSize: Int): Unit = {
     //    println(s"${frequencyDomain.head}___${frequencyDomain.last}")
     filter.reset(default)
     val buff = signalPowerdBm.map { tuple =>
@@ -46,14 +46,14 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
       v
     }
     val zipped = frequencyDomain.zip(buff)
-    detectorFSKTask.foreach(_.updateFreqDomain((zipped, fftBinWidth.toInt)))
+    detectorFSKTask.foreach(_.updateFreqDomain((zipped, fftBinWidth)))
 
     count += 1
     if (count % counterLimitAtomic.get() == 0) {
       count = 0
       if (isOnAtomic.get()) {
         updateValue {
-          (zipped, fftBinWidth)
+          (zipped, fftSize)
         }
       }
     }
@@ -68,7 +68,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftSize: Int, lna: Int,
   override def call(): (Array[(Double, Double)], Double) = {
     if (!noLogs)
       println("start thread MainFskTask")
-    HackRFSweepNativeBridge.start(this, startFrequncyHz, sampleRate, fftSize, lna, vga, bw, ampEnable, noLogs)
+    HackRFSweepNativeBridge.start(this, startFrequncyHz, sampleRate, fftBinWidth, lna, vga, bw, ampEnable, noLogs)
     (Array.empty, 0d)
   }
 }
