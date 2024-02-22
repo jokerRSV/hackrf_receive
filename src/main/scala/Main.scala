@@ -29,11 +29,6 @@ object Main extends JFXApp3 {
   var freqFactor = 0.03
   var bw = 0
 
-  val APP_SIZE_X = 1650
-  val APP_SIZE_Y = 750
-  val widthImageView = APP_SIZE_X
-  val heightImageView = APP_SIZE_Y
-  val scaleYOffset = 600
   var task: Option[MainFskTask] = None
   var detectorFSKTask: Option[DetectorFSKTask] = None
   var freqOffset = 0
@@ -42,6 +37,11 @@ object Main extends JFXApp3 {
   var ampEnable = false
   var levelOne = 2.0
 
+  val APP_SIZE_X = 1650
+  val APP_SIZE_Y = 750
+  val widthImageView = APP_SIZE_X
+  val heightImageView = APP_SIZE_Y
+  val scaleYOffset = 600
   val coef = APP_SIZE_Y * 9 / 13
   val xOffset = 20
   val min = 0
