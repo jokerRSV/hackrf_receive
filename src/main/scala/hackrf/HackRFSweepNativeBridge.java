@@ -37,12 +37,12 @@ public class HackRFSweepNativeBridge {
                                           int lna_gain, int vga_gain, int bw, boolean ampEnable, boolean noLogs) {
         HackrfSweepLibrary.hackrf_sweep_lib_start__fft_power_callback_callback callback = new HackrfSweepLibrary.hackrf_sweep_lib_start__fft_power_callback_callback() {
             @Override
-            public void apply(int fft_size, DoubleByReference freqStart, DoubleByReference powerdBm) {
+            public void apply(int fft_size, DoubleByReference freqStart, DoubleByReference powerdBm, int bandWidth) {
                 double[] freqStartArr = freqStart.getPointer().getDoubleArray(0, fft_size);
                 double[] powerArr = powerdBm.getPointer().getDoubleArray(0, fft_size);
 //                double[] freqStartArr = new double[100];
 //                float[] powerArr = new float[100];
-                dataCallback.newSpectrumData(freqStartArr, powerArr, fft_size);
+                dataCallback.newSpectrumData(freqStartArr, powerArr, fft_size, bandWidth);
             }
         };
         Native.setCallbackThreadInitializer(callback, new CallbackThreadInitializer(true));

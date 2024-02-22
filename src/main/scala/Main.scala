@@ -20,13 +20,14 @@ object Main extends JFXApp3 {
   //  var SAMPLE_RATE = 2621440 // sample rate in Hz
   var SAMPLE_RATE = 10000000 // sample rate in Hz
   //  var FFT_BIN_WIDTH = 20 // in Hz [20, 25, 40, 50, 100, 125, 150]
-//  val baseBinary = 1024
-//  var fftBinWidth = 64 * baseBinary // in Hz
+  //  val baseBinary = 1024
+  //  var fftBinWidth = 64 * baseBinary // in Hz
   var fftBinWidth = 20 // in Hz
   val LNA = 40 // 0 to 40 with 8 step
   val VGA = 10 // 0 to 62 with 2 step
   var counterLimit = 1
   var freqFactor = 0.03
+  var bw = 0
 
   val APP_SIZE_X = 1650
   val APP_SIZE_Y = 750
@@ -47,9 +48,9 @@ object Main extends JFXApp3 {
   val max = 150
   val diff = max - min
 
-  val yScaleB = Array.fill(xOffset * scaleYOffset)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
-  val y1000000B = Array.fill(100)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
-  val y100000B = Array.fill(100)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
+  val yScaleBl = Array.fill(xOffset * scaleYOffset)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
+  val y1000000Bl = Array.fill(100)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
+  val y100000B = Array.fill(100)(0.toByte, 0.toByte, 255.toByte).flatMap(t => Array(t._1, t._2, t._3))
   val y1000R = Array.fill(100)(255.toByte, 0.toByte, 0.toByte).flatMap(t => Array(t._1, t._2, t._3))
   val y10000G = Array.fill(100)(50.toByte, 255.toByte, 50.toByte).flatMap(t => Array(t._1, t._2, t._3))
   val fillY = Array.fill(3)(0.toByte, 150.toByte, 255.toByte).flatMap(t => Array(t._1, t._2, t._3))
@@ -59,7 +60,14 @@ object Main extends JFXApp3 {
   def createMainFskTask(pixelWriter: PixelWriter, startLabel: Label, endLabel: Label, fftSizeLabel: Label, noLogs: Boolean = false): Unit = {
     //    val SAMPLE_RATE = FFT_BIN_WIDTH * FFT_SIZE // sample rate in Hz
     val endFreq = SAMPLE_RATE + START_FREQUNCEY
-    val bw = (endFreq - START_FREQUNCEY) / 4
+    this.bw = {
+      val calcBw = (endFreq - START_FREQUNCEY) / 2
+      if (calcBw > 3500000) {
+        3500000
+      } else {
+        calcBw
+      }
+    }
     //    val bw = 0
     //    val SAMPLE_RATE = 16384000 // sample rate in Hz
     if (!noLogs) {
@@ -80,11 +88,12 @@ object Main extends JFXApp3 {
     detectorFSKTask = Some(new DetectorFSKTask(START_FREQUNCEY, levelOne, noLogs))
     task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, fftBinWidth, LNA, VGA, bw, counterLimit, isOn, this.freqFactor, detectorFSKTask, this.ampEnable, noLogs))
     //draw main y-axis
-    pixelWriter.setPixels(xOffset - 10, 10, 2, scaleYOffset, format, yScaleB, 0, 0)
+    pixelWriter.setPixels(xOffset - 10, 10, 2, scaleYOffset, format, yScaleBl, 0, 0)
 
     task.foreach { t =>
       t.valueProperty().addListener { (_, _, list) =>
-        val (fullList, fftSize) = (list._1, list._2)
+        val (fullList, fftSize, bandWidth) = (list._1, list._2, list._3)
+        this.bw = bandWidth
         fftSizeLabel.text = fftSize.toString
         val cutList = fullList.drop(freqOffset / fftBinWidth.toInt)
         clearImage(pixelWriter)
@@ -99,7 +108,7 @@ object Main extends JFXApp3 {
         }
 
         //draw main x-axis
-        pixelWriter.setPixels(xOffset, scaleYOffset + 10, widthImageView, 2, format, yScaleB, 0, 0)
+        pixelWriter.setPixels(xOffset, scaleYOffset + 10, widthImageView, 2, format, yScaleBl, 0, 0)
         scaleX
           .foreach {
             case (currentX, currentY, currScale) =>
@@ -107,7 +116,7 @@ object Main extends JFXApp3 {
                 //draw scale every 1M
                 val base = currScale.toInt
                 if (base % 1000000 == 0) {
-                  pixelWriter.setPixels(currentX + xOffset, scaleYOffset - 18, 4, 30, format, y1000000B, 0, 0)
+                  pixelWriter.setPixels(currentX + xOffset, scaleYOffset - 18, 4, 30, format, y1000000Bl, 0, 0)
                   //draw scale every 100k
                 } else if (base % 100000 == 0) {
                   pixelWriter.setPixels(currentX + xOffset - 1, scaleYOffset - 5, 3, 15, format, y100000B, 0, 0)

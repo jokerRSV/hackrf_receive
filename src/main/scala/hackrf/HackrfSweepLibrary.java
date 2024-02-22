@@ -12,7 +12,7 @@ import com.sun.jna.ptr.DoubleByReference;
  */
 public class HackrfSweepLibrary implements Library {
     public interface hackrf_sweep_lib_start__fft_power_callback_callback extends Callback {
-        void apply(int fft_size, DoubleByReference freqStart, DoubleByReference powerdBm);
+        void apply(int fft_size, DoubleByReference freqStart, DoubleByReference powerdBm, int bandWidth);
     }
 
     public static native int hackrf_lib_start(hackrf_sweep_lib_start__fft_power_callback_callback _fft_power_callback,

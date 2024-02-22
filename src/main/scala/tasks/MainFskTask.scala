@@ -9,7 +9,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftBinWidth: Int, lna: Int, vga: Int, bw: Int, amountCount: Int,
                   isOn: Boolean, factor: Double, detectorFSKTask: Option[DetectorFSKTask], ampEnable: Boolean, noLogs: Boolean)
-  extends Task[(Array[(Double, Double)], Double)] with HackRFSweepDataCallback {
+  extends Task[(Array[(Double, Double)], Double, Int)] with HackRFSweepDataCallback {
   if (!noLogs)
     println("init MainFskTask")
   val isOnAtomic = new AtomicBoolean(isOn)
@@ -36,7 +36,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftBinWidth: Int, lna: 
   updateFilterFactor(factor)
   //  var buff = ArrayBuffer.fill(fftSize)(default)
 
-  override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double], fftSize: Int): Unit = {
+  override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double], fftSize: Int, bandWidth: Int): Unit = {
     //    println(s"${frequencyDomain.head}___${frequencyDomain.last}")
     filter.reset(default)
     val buff = signalPowerdBm.map { tuple =>
@@ -53,7 +53,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftBinWidth: Int, lna: 
       count = 0
       if (isOnAtomic.get()) {
         updateValue {
-          (zipped, fftSize)
+          (zipped, fftSize, bandWidth)
         }
       }
     }
@@ -65,11 +65,11 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftBinWidth: Int, lna: 
     }
   }
 
-  override def call(): (Array[(Double, Double)], Double) = {
+  override def call(): (Array[(Double, Double)], Double, Int) = {
     if (!noLogs)
       println("start thread MainFskTask")
     HackRFSweepNativeBridge.start(this, startFrequncyHz, sampleRate, fftBinWidth, lna, vga, bw, ampEnable, noLogs)
-    (Array.empty, 0d)
+    (Array.empty, 0d, 0)
   }
 }
 
