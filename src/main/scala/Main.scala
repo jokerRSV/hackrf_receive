@@ -105,7 +105,7 @@ object Main extends JFXApp3 {
         if (scaleX.nonEmpty) {
           startLabel.text = scaleX.head._3.toInt.toString
           this.limitFreq = scaleX.last._3.toInt
-          endLabel.text = s"${scaleX.last._3.toInt.toString}\n${scaleX.head._3.toInt + bandWidth * coef}"
+          endLabel.text = s"${scaleX.last._3.toInt.toString}\n${scaleX.head._3.toInt + bandWidth * cutCoef}"
         }
 
         //draw main x-axis
