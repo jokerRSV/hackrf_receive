@@ -47,6 +47,7 @@ object Main extends JFXApp3 {
   val min = 0
   val max = 2
   val diff = max - min
+  val cutCoef = 0.75
 
   val yScaleBl = Array.fill(xOffset * scaleYOffset)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
   val y1000000Bl = Array.fill(100)(1.toByte, 1.toByte, 1.toByte).flatMap(t => Array(t._1, t._2, t._3))
@@ -85,7 +86,7 @@ object Main extends JFXApp3 {
       }
       TimeUnit.MILLISECONDS.sleep(100)
     }
-    detectorFSKTask = Some(new DetectorFSKTask(START_FREQUNCEY, levelOne, noLogs))
+    detectorFSKTask = Some(new DetectorFSKTask(START_FREQUNCEY, levelOne, noLogs, cutCoef))
     task = Some(new MainFskTask(START_FREQUNCEY, SAMPLE_RATE, fftBinWidth, LNA, VGA, bw, counterLimit, isOn, this.freqFactor, detectorFSKTask, this.ampEnable, noLogs))
     //draw main y-axis
     pixelWriter.setPixels(xOffset - 10, 10, 2, scaleYOffset, format, yScaleBl, 0, 0)
@@ -104,7 +105,7 @@ object Main extends JFXApp3 {
         if (scaleX.nonEmpty) {
           startLabel.text = scaleX.head._3.toInt.toString
           this.limitFreq = scaleX.last._3.toInt
-          endLabel.text = s"${scaleX.last._3.toInt.toString}\n${scaleX.head._3.toInt + bandWidth}"
+          endLabel.text = s"${scaleX.last._3.toInt.toString}\n${scaleX.head._3.toInt + bandWidth * coef}"
         }
 
         //draw main x-axis
@@ -151,7 +152,7 @@ object Main extends JFXApp3 {
       threadDetector.start()
     }
   }
-
+2
   val fillWhite = Array.fill(APP_SIZE_X * heightImageView)(255.toByte, 255.toByte, 255.toByte).flatMap(t => Array(t._1, t._2, t._3))
 
   private def clearImage(pixelWriter: PixelWriter) = {

@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 import scala.collection.parallel.CollectionConverters._
 import scala.concurrent.duration.{Duration, NANOSECONDS}
 
-class DetectorFSKTask(startFrequncyHz: Int, levelOne: Double, noLogs: Boolean) extends Runnable {
+class DetectorFSKTask(startFrequncyHz: Int, levelOne: Double, noLogs: Boolean, cutCoef: Double) extends Runnable {
   if (!noLogs)
     println("init detector")
   val next: (Seq[(Double, Double)], Double, Int, Int) => Seq[(Double, Double)] =
@@ -59,7 +59,7 @@ class DetectorFSKTask(startFrequncyHz: Int, levelOne: Double, noLogs: Boolean) e
       if (fskLength1kHz.length > 1) {
         val listToProcess = frequencyDomain
           .dropWhile(_._1 % step != 0)
-          .takeWhile(_._1 <= startFrequncyHz + bw * 0.75)
+          .takeWhile(_._1 <= startFrequncyHz + bw * cutCoef)
         val sliderList = listToProcess
           .sliding(fskLengthFull, fskLength1kHz.length - 1)
           .toList
