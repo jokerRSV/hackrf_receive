@@ -39,7 +39,7 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftBinWidth: Int, lna: 
     val buff =
       frequencyDomain
         .zip(signalPowerdBm)
-        .takeWhile(_._1 <= startFrequncyHz + bandWidth)
+        .takeWhile(_._1 <= frequencyDomain.head + bandWidth)
         .drop(5)
         .map(tuple => (tuple._1, filter.apply(tuple._2)))
     val zipped = buff
