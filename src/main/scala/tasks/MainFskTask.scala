@@ -5,7 +5,6 @@ import javafx.concurrent.Task
 import mavlib.Batterworth2pLPF
 
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReference}
-import scala.collection.mutable.ArrayBuffer
 
 class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftBinWidth: Int, lna: Int, vga: Int, bw: Int, amountCount: Int,
                   isOn: Boolean, factor: Double, detectorFSKTask: Option[DetectorFSKTask], ampEnable: Boolean, noLogs: Boolean)
@@ -33,18 +32,17 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftBinWidth: Int, lna: 
   var count = 0
   val filter = new Batterworth2pLPF()
   updateFilterFactor(factor)
-  //  var buff = ArrayBuffer.fill(fftSize)(default)
 
   override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double], fftSize: Int, bandWidth: Int): Unit = {
     //    println(s"${frequencyDomain.head}___${frequencyDomain.last}")
     filter.reset(0)
-    val buff = signalPowerdBm.takeWhile(_ <= startFrequncyHz + bandWidth).map { tuple =>
-      //remove minus value
-      //      val mean = (tuple._1 + tuple._2) / 2
-      val v = filter.apply(tuple)
-      v
-    }
-    val zipped = frequencyDomain.zip(buff)
+    val buff =
+      frequencyDomain
+        .zip(signalPowerdBm)
+        .takeWhile(_._1 <= startFrequncyHz + bandWidth)
+        .drop(5)
+        .map(tuple => (tuple._1, filter.apply(tuple._2)))
+    val zipped = buff
     detectorFSKTask.foreach(_.updateFreqDomain((zipped, fftBinWidth, bandWidth)))
 
     count += 1

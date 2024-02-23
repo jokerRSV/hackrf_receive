@@ -96,7 +96,7 @@ object Main extends JFXApp3 {
         val (fullList, fftSize, bandWidth) = (list._1, list._2, list._3)
         this.bw = bandWidth
         fftSizeLabel.text = fftSize.toString
-        val cutList = fullList.drop(freqOffset / fftBinWidth.toInt)
+        val cutList = fullList.drop(freqOffset / fftBinWidth)
         clearImage(pixelWriter)
         val scaleX =
           cutList
