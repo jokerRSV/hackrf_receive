@@ -38,14 +38,14 @@ class MainFskTask(startFrequncyHz: Int, sampleRate: Int, fftBinWidth: Int, lna: 
   override def newSpectrumData(frequencyDomain: Array[Double], signalPowerdBm: Array[Double], fftSize: Int, bandWidth: Int): Unit = {
     //    println(s"${frequencyDomain.head}___${frequencyDomain.last}")
     filter.reset(0)
-    val buff = signalPowerdBm.map { tuple =>
+    val buff = signalPowerdBm.takeWhile(_ <= startFrequncyHz + bandWidth).map { tuple =>
       //remove minus value
       //      val mean = (tuple._1 + tuple._2) / 2
       val v = filter.apply(tuple)
       v
     }
     val zipped = frequencyDomain.zip(buff)
-    detectorFSKTask.foreach(_.updateFreqDomain((zipped, fftBinWidth)))
+    detectorFSKTask.foreach(_.updateFreqDomain((zipped, fftBinWidth, bandWidth)))
 
     count += 1
     if (count % counterLimitAtomic.get() == 0) {

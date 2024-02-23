@@ -71,7 +71,7 @@ object Main extends JFXApp3 {
     //    val bw = 0
     //    val SAMPLE_RATE = 16384000 // sample rate in Hz
     if (!noLogs) {
-      println(s"freq start: ${START_FREQUNCEY} bw: ${endFreq - START_FREQUNCEY} end: ${endFreq}")
+      println(s"freq start: ${START_FREQUNCEY} end: ${endFreq}")
       println(s"sample rate: ${SAMPLE_RATE}")
     }
 
@@ -104,7 +104,7 @@ object Main extends JFXApp3 {
         if (scaleX.nonEmpty) {
           startLabel.text = scaleX.head._3.toInt.toString
           this.limitFreq = scaleX.last._3.toInt
-          endLabel.text = s"${scaleX.last._3.toInt.toString}\n${endFreq}"
+          endLabel.text = s"${scaleX.last._3.toInt.toString}\n${scaleX.head._3.toInt + bandWidth}"
         }
 
         //draw main x-axis
@@ -164,10 +164,6 @@ object Main extends JFXApp3 {
     imageView.margin = Insets(0, 0, 0, 0)
     imageView
   }
-
-  //  def createCommand(): Unit = {
-  //    createMainFskTask(pixelWriter, startLabel, endLabel, fftBinWidthLabel)
-  //  }
 
   override def start(): Unit = {
     val writableImage = new WritableImage(APP_SIZE_X, heightImageView)

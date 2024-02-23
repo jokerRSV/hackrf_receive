@@ -15,7 +15,7 @@ class DetectorFSKTask(startFrequncyHz: Int, levelOne: Double, noLogs: Boolean) e
     (ar, i) => ar.takeWhile(_._1 <= startFrequncyHz + i)
   val step = 1000 // in Hz
 
-  val atomicFreqDomain = new AtomicReference[(Array[(Double, Double)], Int)]((Array.fill(100)(0, 0), 0))
+  val atomicFreqDomain = new AtomicReference[(Array[(Double, Double)], Int, Int)]((Array.fill(100)(0, 0), 0, 0))
   val levelOneAtomic = new AtomicReference[Double](levelOne)
   val isCancelled = new AtomicBoolean(false)
   val coef = 6
@@ -29,7 +29,7 @@ class DetectorFSKTask(startFrequncyHz: Int, levelOne: Double, noLogs: Boolean) e
     PairsBool(9500, 10500, condition = false),
   )
 
-  def updateFreqDomain(zippedFreqDomain: (Array[(Double, Double)], Int)): Unit = {
+  def updateFreqDomain(zippedFreqDomain: (Array[(Double, Double)], Int, Int)): Unit = {
     atomicFreqDomain.set(zippedFreqDomain)
   }
 
@@ -52,17 +52,20 @@ class DetectorFSKTask(startFrequncyHz: Int, levelOne: Double, noLogs: Boolean) e
     def loop(): Unit = {
       //      println(s"working ${Thread.currentThread().threadId()}")
       //      val startTime = System.nanoTime()
-      val (frequencyDomain, fftBinWidth) = atomicFreqDomain.get()
+      val (frequencyDomain, fftBinWidth, bw) = atomicFreqDomain.get()
       val level = levelOneAtomic.get()
       val fskLengthFull = lengthFunc(frequencyDomain, 12000).length
       val fskLength1kHz = lengthFunc(frequencyDomain, step)
       if (fskLength1kHz.length > 1) {
-        frequencyDomain
+        val listToProcess = frequencyDomain
           .dropWhile(_._1 % step != 0)
+          .takeWhile(_._1 <= startFrequncyHz + bw * 0.75)
+        val sliderList = listToProcess
           .sliding(fskLengthFull, fskLength1kHz.length - 1)
           .toList
           .filter(_.length == fskLengthFull)
-//          .par
+        sliderList
+          .par
           .foreach { l =>
             lazy val center = levelOneAtomic.get()
             lazy val headFreq = l.head._1
