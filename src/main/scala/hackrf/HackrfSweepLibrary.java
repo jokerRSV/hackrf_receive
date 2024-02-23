@@ -16,7 +16,7 @@ public class HackrfSweepLibrary implements Library {
     }
 
     public static native int hackrf_lib_start(hackrf_sweep_lib_start__fft_power_callback_callback _fft_power_callback,
-                                              int freq_hz, int sample_rate_hz, int fft_bin_width, int lna_gain, int vga_gain, int bw, boolean amp_enable, boolean no_logs);
+                                              int freq_ghz_start, int freq_ghz_end, int sample_rate_hz, int fft_bin_width, int lna_gain, int vga_gain);
 
     /**
      * Original signature : <code>void hackrf_lib_stop()</code>
